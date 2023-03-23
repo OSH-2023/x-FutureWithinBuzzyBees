@@ -21,7 +21,7 @@
 - GlusterFS：开源分布式横向扩展文件系统
 - JuiceFS：使用公有云中已有的对象存储来替换 DataNode 和 ChunkServer
 
-![image-20230322013854948](C:\Users\Asteria\AppData\Roaming\Typora\typora-user-images\image-20230322013854948.png)
+![image-20230322013854948](DFS调研.assets\image-20230322013854948.png)
 
 ### 相关名词
 
@@ -86,13 +86,13 @@ GFS以及 FastDFS、mogileFS、HDFS、TFS等类GFS系统都**不是系统级的�
 
 - 整体结构：
 
-<img src="C:\Users\Asteria\AppData\Roaming\Typora\typora-user-images\image-20230322013540253.png" alt="image-20230322013540253" style="zoom:80%;" />
+<img src="DFS调研.assets\image-20230322013540253.png" alt="image-20230322013540253" style="zoom:80%;" />
 
 ### 有待进一步调查的选题方向
 
 #### 基于FastDFS+Redis的分布式文件存储系统及方法
 
-![image-20230322015458379](C:\Users\Asteria\AppData\Roaming\Typora\typora-user-images\image-20230322015458379.png)
+![image-20230322015458379](DFS调研.assets\image-20230322015458379.png)
 
 
 
