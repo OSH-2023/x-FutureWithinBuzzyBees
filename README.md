@@ -2,7 +2,9 @@
 
 ## 🐝小组名称：FutureWithinBuzzyBees
 
-勤劳的小蜜蜂创造未来~🐝<a href="https://imgse.com/i/pp26vXn"><img src="https://s1.ax1x.com/2023/03/30/pp26vXn.md.jpg" alt="pp26vXn.jpg" border="0" /></a>
+勤劳的小蜜蜂创造未来~🐝
+
+<img src="https://s1.ax1x.com/2023/03/30/pp26vXn.md.jpg" alt="pp26vXn.jpg" border="0" />
 
 ## :champagne:小组成员
 

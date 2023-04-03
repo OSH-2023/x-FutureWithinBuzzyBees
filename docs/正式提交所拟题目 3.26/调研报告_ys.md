@@ -1,4 +1,6 @@
-[# 调研报告
+# 调研报告
+
+[TOC]
 
 -----Made by ys
 
@@ -90,7 +92,7 @@ DisGraFS为改善上述问题，提出了分布式图文件系统的概念，统
 
 一个 eBPF 程序会附加到指定的内核代码路径中，当执行该代码路径时，会执行对应的 eBPF 程序。鉴于它的起源，eBPF 特别适合编写网络程序，将该网络程序附加到网络 socket，进行流量过滤、流量分类以及执行网络分类器的动作。eBPF 程序甚至可以修改一个已建链的网络 socket 的配置。XDP 工程会在网络栈的底层运行 eBPF 程序，高性能地处理接收到的报文。从下图可以看到 eBPF 支持的功能：
 
-![img](https://static001.geekbang.org/infoq/90/90e32d200bad7a69e65cf57f12a08424.webp?x-oss-process=image%2Fresize%2Cp_80%2Fformat%2Cpng)
+![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/90e32d200bad7a69e65cf57f12a08424.png)
 
 eBPF 对调试内核和执行性能分析也具有很大的帮助，程序可以附加到跟踪点、kprobes 和 perf 事件。因为 eBPF 可以访问内核数据结构，**开发者可以在不编译内核的前提下编写并测试代码**。对于工作繁忙的工程师，通过该方式可以方便地调试一个在线运行的系统。此外，还可以通过静态定义的追踪点调试用户空间的程序 (即 BCC 调试用户程序，如 Mysql)。
 
@@ -104,7 +106,7 @@ eBPF 对调试内核和执行性能分析也具有很大的帮助，程序可以
 
 **在内核中运行用户空间的代码可能会存在安全和稳定性风险。因此，在加载 eBPF 程序前需要进行大量校验。**
 
-![img](https://static001.geekbang.org/infoq/8b/8bf3d70f514e3fde9b6bc6edb0d86f6b.webp?x-oss-process=image%2Fresize%2Cp_80%2Fformat%2Cpng)
+![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/8bf3d70f514e3fde9b6bc6edb0d86f6b.png)
 
 **首先通过对程序控制流的深度优先搜索保证 eBPF 能够正常结束，不会因为任何循环导致内核锁定**。严禁使用无法到达的指令；任何包含无法到达的指令的程序都会导致加载失败。
 
@@ -187,7 +189,7 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 - 磁盘控制器收到指令后，于是就开始准备数据，会把数据放入到磁盘控制器的内部缓冲区中，然后产生一个**中断**；
 - CPU 收到中断信号后，停下手头的工作，接着把磁盘控制器的缓冲区的数据一次一个字节地读进自己的寄存器，然后再把寄存器里的数据写入到内存，而在数据传输的期间 CPU 是无法执行其他任务的。
 
-![img](https://cdn.jsdelivr.net/gh/xiaolincoder/ImageHost2/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/%E9%9B%B6%E6%8B%B7%E8%B4%9D/I_O%20%E4%B8%AD%E6%96%AD.png)
+![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/I_O%20%E4%B8%AD%E6%96%AD.png)
 
 
 
@@ -200,7 +202,7 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 3. 用户程序执行 write 系统调用，从用户态切换到内核态，CPU 将数据从用户缓冲区中拷贝到Socket 发送缓冲区中；
 4. CPU 下发指令，让 DMA 控制器来处理数据，将 Socket 发送缓冲区的数据拷贝到网卡进行网络传输，write 调用结束。
 
-![img](https://cdn.jsdelivr.net/gh/xiaolincoder/ImageHost2/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/%E9%9B%B6%E6%8B%B7%E8%B4%9D/%E4%BC%A0%E7%BB%9F%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93.png)
+![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/%E4%BC%A0%E7%BB%9F%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93.png)
 
 由此可以看出传统的文件传输开销很大，期间共**发生了 4 次用户态与内核态的上下文切换**，还**发生了 4 次数据拷贝**，其中两次是 DMA 的拷贝，另外两次则是通过 CPU 拷贝的，过多的数据拷贝无疑会消耗 CPU 资源，大大降低了系统性能。
 
@@ -213,7 +215,7 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 ![img](https://cdn.jsdelivr.net/gh/xiaolincoder/ImageHost2/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/%E9%9B%B6%E6%8B%B7%E8%B4%9D/mmap%20+%20write%20%E9%9B%B6%E6%8B%B7%E8%B4%9D.png)
 
 - **sendfile**：sendfile 同样省去了将数据在内核和用户空间中拷贝，与 mmap 不同的是，sendfile 不需要借助 write 调用，而是一次完整的内核拷贝过程，减少了两次 CPU 上下文切换。
-- ![img](https://cdn.jsdelivr.net/gh/xiaolincoder/ImageHost2/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/%E9%9B%B6%E6%8B%B7%E8%B4%9D/senfile-3%E6%AC%A1%E6%8B%B7%E8%B4%9D.png)
+- ![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/senfile-3%E6%AC%A1%E6%8B%B7%E8%B4%9D.png)
 - **sendfile + DMA gather copy**：对 sendfile 系统调用做了修改，引入了 gather 操作，不需要将内核缓冲区的数据拷贝到 Socket 中，而是将它对于的数据描述信息（内存地址、文件描述符，文件长度等）记录到 Socket 缓冲区中，最后由 DMA 根据这些文件描述信息从内核读缓冲区中找到数据，直接拷贝到网卡设备中。
 - **splice**：splice 系统调用可以在内核空间的读缓冲区和网络缓冲区之间建立管道（pipeline），从而避免了两者之间的 CPU 拷贝操作。
 
@@ -264,7 +266,7 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 
 2. ##### 原理：
 
-![img](https://pic3.zhimg.com/80/v2-521eddbda0732b622ab9ae91747b58b2_720w.webp)
+![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/v2-521eddbda0732b622ab9ae91747b58b2_720w.webp)
 
 Extfuse的实现框架图如上所示，它通过在FUSE的内核与用户层之间通讯fuse_request_send函数中增加extfuse的ebpf钩子来实现ebpf程序的挂载。ebpf的程序通过判断文件或者目录的内容是否在cache中，如果在cache中则请求直接返回，而不用访问用户态文件系统的相应接口。而cache是采用ebpf框架中的BPF_MAP_TYPE_HASH，这个数据结构可以在用户态和内核态之间共享和查询数据。
 
@@ -272,7 +274,7 @@ Extfuse通过hook FUSE传到用户态的元数据操作，发现cache元数据�
 
 3. ##### 优化效果：
 
-![img](https://pic4.zhimg.com/80/v2-1e9909c12970b0e9e2be68f86d4c580f_720w.webp)
+![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/v2-1e9909c12970b0e9e2be68f86d4c580f_720w.webp)
 
 优化的结果如上图所示。在图中显示了对内核做编译操作和解压缩操作的测试情况下监测到的应用层操作的对比。文件系统使用的是作者开发的用户态文件系统StackFS，AllOpt表示对READ和WRITE操作也在内核中进行了直接返回，而不发到应用层。MDOpt操作表示只是对元数据在内核中直接返回，Opt是原始的FUSE，不做ebpf的优化。
 
@@ -310,15 +312,15 @@ d. 在qdisc挂载eBPF的SNAT代码，根据eBPF map中的session信息执行SNAT
 
 优化前后流程对比：
 
-![ 'bpf-process.png'](https://img2020.cnblogs.com/other/2041406/202008/2041406-20200826172233366-1601111089.png)
+![ 'bpf-process.png'](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/2041406-20200826172233366-1601111089.png)
 
 2. ##### 性能测试
 
 通过量化分析的方法，用perf工具读取CPU性能计数器，从微观的角度解释宏观的性能数据。这里采用的压测程序是wrk和iperf。
 
-![ 'nodeport短连接cps.png'](https://img2020.cnblogs.com/other/2041406/202008/2041406-20200826172236072-1062852469.png)
+![ 'nodeport短连接cps.png'](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/2041406-20200826172236072-1062852469.png)
 
-![ 'clusterip短连接cps.png'](https://img2020.cnblogs.com/other/2041406/202008/2041406-20200826172236857-756339901.png)
+![ 'clusterip短连接cps.png'](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/2041406-20200826172236857-756339901.png)
 
 IPVS-BPF模式相对IPVS模式，Nodeport短连接性能提高了64%，clusterIP短连接性能提高了40%。
 
@@ -326,9 +328,9 @@ NodePort优化效果更明显，是因为NodePort需要SNAT，而eBPF SNAT比ipt
 
 指令数与CPI:
 
-![ 'nodeport-inst-per-req.png'](https://img2020.cnblogs.com/other/2041406/202008/2041406-20200826172239418-304165824.png)
+![ 'nodeport-inst-per-req.png'](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/2041406-20200826172239418-304165824.png)
 
-![ 'nodeport-cpi.png'](https://img2020.cnblogs.com/other/2041406/202008/2041406-20200826172240088-2036361396.png)
+![ 'nodeport-cpi.png'](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_ys.assets/2041406-20200826172240088-2036361396.png)
 
 上图中从Perf工具看，IPVS-BPF 模式下CPI略有增加，大概16%，但平均每个请求耗费的CPU指令数, IPVS-BPF模式下降了38%。这也是性能提升的最主要原因。
 
