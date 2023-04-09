@@ -359,7 +359,7 @@ OSH2022在DisGraFS实现的优化——监测功能：该致力于在 DisGraFS �
 
 **XRP: In-Kernel Storage Functions with eBPF:**
 
-([XRP: In-Kernel Storage Functions with eBPF](https://github.com/xrp-project/XRP)) 论文和slides见[research_lzc.md](..\3.19 完成组队，初拟题目\research_lzc.md)
+([XRP: In-Kernel Storage Functions with eBPF](https://github.com/xrp-project/XRP)) 论文和slides见[research_lzc.md](.\3.19 完成组队，初拟题目\research_lzc.md)
 
 其中提到XRP是首个使用eBPF来降低内核存储软件开销的系统 XRP允许应用程序从NVMe驱动程序中的eBPF钩子执行用户定义的存储函数，可以安全地绕过大部分内核的存储栈。有巨大的借鉴意义
 
