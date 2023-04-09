@@ -1,6 +1,45 @@
 # 调研报告
 
-[TOC]
+[调研报告](#调研报告)
+
+- [项目概述](#项目概述)
+- [项目背景](#项目背景)
+  - [分布式文件系统(DFS)](#分布式文件系统dfs)
+    - [概念](#概念)
+    - [优缺点](#优缺点)
+    - [发展必要性](#发展必要性)
+  - [历届项目对DFS的实现与优化](#历届项目对dfs的实现与优化)
+    - [OSH-2017/DFS](#osh-2017dfs)
+    - [OSH-2020/dontpanic](#osh-2020dontpanic)
+  - [分布式图文件系统（DisGraFS)：](#分布式图文件系统disgrafs)
+    - [图数据库](#图数据库)
+    - [DisGraFS](#disgrafs)
+      - [基本概念](#基本概念)
+      - [整体架构](#整体架构)
+      - [结构](#结构)
+      - [功能与操作](#功能与操作)
+        - [新增文件](#新增文件)
+        - [文件搜索](#文件搜索)
+        - [文件获取](#文件获取)
+        - [删除文件](#删除文件)
+  - [历届项目对DisGraFS的优化](#历届项目对disgrafs的优化)
+    - [OSH-2022/WowKiddy](#osh-2022wowkiddy)
+    - [OSH-2022/TOBEDONE](#osh-2022tobedone)
+    - [对历届项目的思考](#对历届项目的思考)
+  - [eBPF](#ebpf)
+    - [简介](#简介)
+    - [工作原理](#工作原理)
+    - [使用场景](#使用场景)
+  - [DMA与零拷贝技术](#dma与零拷贝技术)
+    - [传统I/O数据传输过程：](#传统io数据传输过程)
+    - [零拷贝技术](#零拷贝技术)
+    - [eBPF在DFS中的应用前景](#ebpf在dfs中的应用前景)
+- [立项依据](#立项依据)
+- [前瞻性/重要性分析](#前瞻性重要性分析)
+- [相关工作](#相关工作)
+  - [参考历届项目](#参考历届项目)
+  - [目前技术参考](#目前技术参考)
+  - [参考文献](#参考文献)
 
 ## 项目概述
 
@@ -51,7 +90,7 @@
 
 #### OSH-2017/DFS
 
-<img src="./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/image-20230401174545902.png" alt="image-20230401174545902" style="zoom:80%;" />
+<img src="./research.assets/image-20230401174545902.png" alt="image-20230401174545902" style="zoom:80%;" />
 
 特点：
 
@@ -65,7 +104,7 @@
 
 基于2017年DFS项目优化。
 
-<img src="./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/image-20230401174423148.png" alt="image-20230401174423148" style="zoom:80%;" />
+<img src="./research.assets/image-20230401174423148.png" alt="image-20230401174423148" style="zoom:80%;" />
 
 优化内容：
 
@@ -103,7 +142,7 @@
 
 DisGraFS——分布式图文件系统
 
-<img src="./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/structure.png" alt="structure" style="zoom:80%;" />
+<img src="./research.assets/structure.png" alt="structure" style="zoom:80%;" />
 
 [DisGraFS](https://github.com/OSH-2021/x-DisGraFS.git)为改善传统分布式文件系统的上述问题，提出了分布式图文件系统的概念，统一了单机图文件系统和分布式文件系统的优点。将图结构与思想应用于分布式文件系统上面，使得分布式图文件系统兼具图文件系统方便用户快速搜索，模糊搜索，查找相关文件的特点以及分布式文件系统的海量文件存储，云存储的特点。同时吸取前人的经验，整个项目开发过程均使用便于跨平台的语言和属性，以满足当今以及未来社会对于多设备，多平台的大容量，快搜索的文件系统的需求。
 
@@ -208,13 +247,13 @@ eBPF是一种可编程的内核技术，可以在不修改内核源代码的情�
 
 #### 使用场景
 
-![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/90e32d200bad7a69e65cf57f12a08424.png)
+![img](./research.assets/90e32d200bad7a69e65cf57f12a08424.png)
 
 **网络场景**
 
 依赖eBPF的网络加速方案——XDP（eXpress Data Path）
 
-<img src="./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/image-20230401222246060.png" alt="image-20230401222246060" style="zoom:70%;" />
+<img src="./research.assets/image-20230401222246060.png" alt="image-20230401222246060" style="zoom:70%;" />
 
 此前的kernel bypass实现方式是：将网络硬件完全交由某个专门的用户空间应用（userspace application）接管，从而避免内核和用户态上下文切换的昂贵性能开销。但是，操作系统被旁路（绕过）之后，它的应用隔离（application isolation） 和安全机制（security mechanisms）就都失效了；一起失效的还有各种经过已经 充分测试的配置、部署和管理工具。
 
@@ -248,7 +287,7 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 - 磁盘控制器收到指令后，于是就开始准备数据，会把数据放入到磁盘控制器的内部缓冲区中，然后产生一个**中断**；
 - CPU 收到中断信号后，停下手头的工作，接着把磁盘控制器的缓冲区的数据一次一个字节地读进自己的寄存器，然后再把寄存器里的数据写入到内存，而在数据传输的期间 CPU 是无法执行其他任务的。
 
-![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/I_O%20%E4%B8%AD%E6%96%AD.png)
+![img](./research.assets/I_O%20%E4%B8%AD%E6%96%AD.png)
 
 
 
@@ -259,7 +298,7 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 3. 用户程序执行 write 系统调用，从用户态切换到内核态，CPU 将数据从用户缓冲区中拷贝到Socket 发送缓冲区中；
 4. CPU 下发指令，让 DMA 控制器来处理数据，将 Socket 发送缓冲区的数据拷贝到网卡进行网络传输，write 调用结束。
 
-![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/%E4%BC%A0%E7%BB%9F%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93.png)
+![img](./research.assets/%E4%BC%A0%E7%BB%9F%E6%96%87%E4%BB%B6%E4%BC%A0%E8%BE%93.png)
 
 由此可以看出传统的文件传输开销很大，期间共**发生了 4 次用户态与内核态的上下文切换**，还**发生了 4 次数据拷贝**，其中两次是 DMA 的拷贝，另外两次则是通过 CPU 拷贝的，过多的数据拷贝无疑会消耗 CPU 资源，大大降低了系统性能。
 
@@ -269,10 +308,10 @@ DMA 的传输过程必须经过 DMA 请求，DMA 响应，DMA 传输，DMA 结�
 
 - **mmap + write**：mmap 是一个系统调用，主要作用就是将用户缓冲区与内核中的读缓冲区进行映射，映射后这一步就不需要进行数据拷贝了，而 write 操作实际上是从内核读缓冲区中把数据拷贝到 Socket 发送缓冲区，整个过程减少了一次拷贝操作，但是系统调用切换没有减少。
 
-![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/mmap%20+%20write%20%E9%9B%B6%E6%8B%B7%E8%B4%9D.png)
+![img](./research.assets/mmap%20+%20write%20%E9%9B%B6%E6%8B%B7%E8%B4%9D.png)
 
 - **sendfile**：sendfile 同样省去了将数据在内核和用户空间中拷贝，与 mmap 不同的是，sendfile 不需要借助 write 调用，而是一次完整的内核拷贝过程，减少了两次 CPU 上下文切换。
-- ![img](./%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A_%E6%B1%87%E6%80%BB_cwz.assets/senfile-3%E6%AC%A1%E6%8B%B7%E8%B4%9D.png)
+- ![img](./research.assets/senfile-3%E6%AC%A1%E6%8B%B7%E8%B4%9D.png)
 - **sendfile + DMA gather copy**：对 sendfile 系统调用做了修改，引入了 gather 操作，不需要将内核缓冲区的数据拷贝到 Socket 中，而是将它对于的数据描述信息（内存地址、文件描述符，文件长度等）记录到 Socket 缓冲区中，最后由 DMA 根据这些文件描述信息从内核读缓冲区中找到数据，直接拷贝到网卡设备中。
 - **splice**：splice 系统调用可以在内核空间的读缓冲区和网络缓冲区之间建立管道（pipeline），从而避免了两者之间的 CPU 拷贝操作。
 
