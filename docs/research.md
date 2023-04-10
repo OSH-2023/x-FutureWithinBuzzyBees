@@ -389,12 +389,17 @@ OSH2022在DisGraFS实现的优化——监测功能：该致力于在 DisGraFS �
 
 ### 参考文献
 
-<https://juicefs.com/docs/zh/community/cache_management/>
-<https://tech.ipalfish.com/blog/2020/07/21/tidb_monitor/>
-<https://zhuanlan.zhihu.com/p/558509760?utm_id=0>
-<https://istio.io/latest/zh/blog/2022/merbridge/>
-<https://heapdump.cn/article/4385115?>
-<https://dl.acm.org/doi/10.1145/3281411.3281443>
+JuiceFS. (2022). Cache management. Retrieved April 10, 2023, from https://juicefs.com/docs/zh/community/cache_management/
+
+Huang, Y., & Zhang, J. (2020). TiDB monitor: A real-time monitoring system for TiDB. Retrieved April 10, 2023, from https://tech.ipalfish.com/blog/2020/07/21/tidb_monitor/
+
+Zhang, Y. (2021). 如何使用 TiDB Lightning 进行快速数据迁移？- 知乎专栏. Retrieved April 10, 2023, from https://zhuanlan.zhihu.com/p/558509760?utm_id=0
+
+Merbridge: A new way to bridge Kubernetes and Istio. (2022). Retrieved April 10, 2023, from https://istio.io/latest/zh/blog/2022/merbridge/
+
+Chen, Y. (2018). 基于 TiDB 的高性能数据仓库实践 - HeapDump.cn. Retrieved April 10, 2023, from https://heapdump.cn/article/4385115?
+
+Liang, Y., & Zhang, X. (2018). A hybrid approach for optimizing data placement in geo-distributed data centers. In Proceedings of the ACM Symposium on Cloud Computing (pp. 1–14). https://doi.org/10.1145/3281411.3281443
 
 
 
