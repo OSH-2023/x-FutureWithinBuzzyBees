@@ -1,26 +1,22 @@
 - [Analysis of Feasibility](#analysis-of-feasibility)
-  - [理论依据](#理论依据)
-      - [1. 传统的数据的四次拷贝与四次上下文切换](#1-传统的数据的四次拷贝与四次上下文切换)
-      - [2. DMA 参与下的数据拷贝](#2-dma-参与下的数据拷贝)
-      - [3.RDMA:x:](#3rdmax)
-      - [4.XDP](#4xdp)
-  - [技术依赖](#技术依赖)
+  - [技术依据](#技术依据)
     - [1.分布式文件操作系统](#1分布式文件操作系统)
     - [2.使用eBPF与XDP技术实现一个兼备DMA能力的内核](#2使用ebpf与xdp技术实现一个兼备dma能力的内核)
-      - [使用eBPF实现DMA](#使用ebpf实现dma)
+      - [DMA 参与下的数据拷贝](#dma-参与下的数据拷贝)
+      - [----使用eBPF实现DMA](#----使用ebpf实现dma)
     - [3.使用Prometheus+Grafana进行性能监控与测试](#3使用prometheusgrafana进行性能监控与测试)
-  - [创新点​](#创新点)
+  - [创新点](#创新点)
   - [计划步骤](#计划步骤)
   - [参考资料](#参考资料)
 
+
 # Analysis of Feasibility
 
-## 理论依据
+## 技术依据
 
-首先要理解为什么/如何来提高我们的IO性能,概括性的来说就是减少数据的拷贝次数.
-
-####  1. 传统的数据的四次拷贝与四次上下文切换
-
+### 1.分布式文件操作系统
+部署并优化前人项目DisGraFS^[1]^.
+### 2.使用eBPF与XDP技术实现一个兼备DMA能力的内核
 在没有任何优化技术使用的背景下，操作系统为此会进行 4 次数据拷贝：
 
 4 次 copy：
@@ -35,73 +31,113 @@ stateDiagram
 
 物理设备 Input-> 内存(内核态)->内存内部拷贝(经由CPU调控)->内存(内核态)->Output
 
-#### 2. DMA 参与下的数据拷贝
-
-​    DMA 技术很容易理解，本质上，DMA 技术就是我们在主板上放一块独立的芯片。在进行内存和 I/O 设备的数据传输的时候，我们不再通过 CPU 来控制数据传输，而直接通过 DMA 控制器（DMA Controller，简称 DMAC）。这块芯片，我们可以认为它其实就是一个协处理器（Co-Processor），DMAC 的价值在如下情况中尤其明显：当我们要传输的数据特别大、速度特别快。比如说，我们用千兆网卡或者硬盘传输大量数据的时候，如果都用 CPU 来搬运的话，肯定忙不过来，所以可以选择 DMAC。
-
-​    原本，计算机所有组件之间的数据拷贝（流动）必须经过 CPU。现在，DMAC 代替了 CPU 负责内存与磁盘、内存与网卡之间的数据搬运，CPU 作为 DMAC 的控制者.
+####  DMA 参与下的数据拷贝
+####        ----使用eBPF实现DMA
 
 ```mermaid
-stateDiagram
-    IO设备 --> DMA_machine :data
-    CPU -->  DMA_machine :control
-	DMA_machine  --> IO设备:data
+    graph LR
+    IO设备 --> DMA_machine
+    CPU --> DMA_machine
+    DMA_machine --> IO设备:data
+    A[解析数据包] -- 获取各个字段信息 --> B[eBPF程序]
+    B -- 实现DMA传输 --> C{存储DMA传输相关信息}
+    C --> D(dma_buf_map)
+    C --> E(dma_engine_map)
+    C --> F(dma_transfer_map)
+    B --> G[XDP_PASS]
 ```
+- dma_buf_map映射：用于存储DMA缓冲区的物理地址和大小。在这个映射中，每个键对应一个DMA缓冲区的ID，每个值是一个struct dma_buf结构体，包含了DMA缓冲区的物理地址和大小。通过这个映射，可以在eBPF程序中方便地访问和管理DMA缓冲区。
 
-比如sendfile技术,它直接将传入数据传出而不需要CPU做额外处理,故可以不经过用户空间而直接把数据流传送给网卡(输出设备).这种sendfile方式 依赖于 DMA 技术，将原本由四次CPU全程负责的拷贝减少到两次,因此可以预期时间可能可以缩短为原来的**一半**左右.(一个实例Kakfa)这就是所谓的**零拷贝**（Zero-copy）技术，因为我们没有在内存层面去拷贝数据，也就是说全程没有通过 CPU 来搬运数据，所有的数据都是通过DMA来进行传输的。
+- dma_engine_map映射：用于存储DMA引擎的状态。在这个映射中，每个键对应一个DMA引擎的ID，每个值是一个struct dma_engine结构体，包含了DMA引擎的状态。通过这个映射，可以在eBPF程序中方便地访问和管理DMA引擎的状态。
 
-#### 3.RDMA:x:
+- dma_transfer_map映射：用于存储DMA传输的状态、结果、错误等信息。在这个映射中，每个键对应一个DMA传输的ID，每个值是一个struct dma_transfer结构体，包含了DMA传输的状态、结果、错误等信息。通过这个映射，可以在eBPF程序中方便地访问和管理DMA传输的相关信息，例如传输是否完成、是否出现错误等。
 
-RDMA 即 Remote Direct Memory Access，其区别于 DMA（Direct Memory Access）。在数据中心领域，RDMA 是一种绕过远程主机操作系统内核访问其内存中数据的技术，由于不经过操作系统，不仅节省了大量 CPU 资源，同样也提高了系统吞吐量、降低了系统的网络通信延迟，尤其适合在大规模并行计算机集群中有广泛应用。在基于 NVMe over Fabric 的数据中心中，RDMA 可以配合高性能的 NVMe SSD 构建高性能、低延迟的存储网络[1]。
-
-RDMA 技术基于 DMA 技术的硬件技术实现，此项技术特点在于在于不需要 CPU 干预而直接访问远程主机内存（应当说成 CPU 不需要负责数据搬运，仅仅需要管理），重点是为解决网络传输中服务器端数据处理的延迟。但是相较于DMA需要特殊的网络适配器和驱动程序支持，这些硬件和软件通常只存在于高端服务器和数据中心设备中,故可能难以实现:cry:
-
-#### 4.XDP
-
-XDP 是Linux 内核中提供高性能、可编程的网络数据包处理框架。XDP的原理是在数据包进入内核网络协议栈之前，通过在网络接口驱动程序中注册一个eBPF程序，实现对数据包的快速处理和过滤，从而提高网络性能和安全性。关于这方面的入门可看参考资料^[3]^
-
-## 技术依赖
-
-### 1.分布式文件操作系统
-
-根据文档貌似是延续前人的项目(但是部署他们项目的时间成本以及他们的关联性貌似与我们选题相关性不是那么大?)个人建议直接用一个比如JuiceFS这种框架搭一个简单版本的分布式文件系统.
-
-### 2.使用eBPF与XDP技术实现一个兼备DMA能力的内核
-
-#### 使用eBPF实现DMA
-
-在Linux系统中，DMA可以通过eBPF实现，以下是一个简单的示例：
+在Linux系统中，DMA可以通过eBPF实现，copilot帮我写了一段代码：
 
 ```c
 #include <linux/bpf.h>
-#include <linux/pkt_cls.h>
+#include <linux/if_ether.h>
+#include <linux/if_packet.h>
+#include <linux/ip.h>
+#include <linux/in.h>
+#include <linux/tcp.h>
 
-SEC("action")
-int dma_action(struct __sk_buff *skb)
+#define DMA_BUF_SIZE 4096
+
+struct dma_buf {
+    unsigned long phys_addr;
+    unsigned int size;
+};
+
+struct dma_engine {
+    unsigned int id;
+    unsigned int status;
+};
+
+struct dma_transfer {
+    unsigned int id;
+    unsigned int status;
+    unsigned int result;
+    unsigned int error;
+    unsigned int complete;
+    unsigned int timeout;
+    unsigned int cancel;
+    unsigned int pause;
+    unsigned int resume;
+};
+
+struct bpf_map_def SEC("maps") dma_buf_map = {
+    .type = BPF_MAP_TYPE_ARRAY,
+    .key_size = sizeof(unsigned int),
+    .value_size = sizeof(struct dma_buf),
+    .max_entries = 1024,
+};
+
+struct bpf_map_def SEC("maps") dma_engine_map = {
+    .type = BPF_MAP_TYPE_ARRAY,
+    .key_size = sizeof(unsigned int),
+    .value_size = sizeof(struct dma_engine),
+    .max_entries = 1024,
+};
+
+struct bpf_map_def SEC("maps") dma_transfer_map = {
+    .type = BPF_MAP_TYPE_ARRAY,
+    .key_size = sizeof(unsigned int),
+    .value_size = sizeof(struct dma_transfer),
+    .max_entries = 1024,
+};
+
+SEC("xdp")
+int xdp_prog(struct xdp_md *ctx)
 {
-    void *data = (void *)(long)skb->data;
-    void *data_end = (void *)(long)skb->data_end;
+    void *data_end = (void *)(long)ctx->data_end;
+    void *data = (void *)(long)ctx->data;
 
-    /* 检查数据包是否符合要求 */
-    if (data + sizeof(struct ethhdr) > data_end)
-        return TC_ACT_OK;
-
-    /* 获取数据包的MAC地址 */
     struct ethhdr *eth = data;
-    unsigned char *mac = eth->h_dest;
+    if (eth + 1 > (struct ethhdr *)data_end) {
+        return XDP_DROP;
+    }
 
-    /* 进行DMA传输 */
-    /* ... */
+    struct iphdr *ip = data + sizeof(struct ethhdr);
+    if (ip + 1 > (struct iphdr *)data_end) {
+        return XDP_DROP;
+    }
 
-    return TC_ACT_OK;
+    struct tcphdr *tcp = data + sizeof(struct ethhdr) + sizeof(struct iphdr);
+    if (tcp + 1 > (struct tcphdr *)data_end) {
+        return XDP_DROP;
+    }
+
+    // TODO: Implement DMA transfer using eBPF
+
+    return XDP_PASS;
 }
-char __license[] SEC("license") = "GPL";
 
 ```
 
-这个示例使用了eBPF的TC（Traffic Control）功能，对接收到的数据包进行了简单的DMA传输。在这个示例中，我们定义了一个名为`dma_action`的eBPF程序，它会被TC调用来处理每个接收到的数据包。在程序中，我们首先获取了数据包的指针`data`和`data_end`，然后检查了数据包是否符合要求。如果数据包符合要求，我们就获取了数据包的MAC地址，并进行了DMA传输。
+这段示例代码包含了一个名为dma_buf_map的eBPF映射，用于存储DMA缓冲区的物理地址和大小；一个名为dma_engine_map的eBPF映射，用于存储DMA引擎的状态；一个名为dma_transfer_map的eBPF映射，用于存储DMA传输的状态、结果、错误等信息。
 
-> 需要注意的是，这个示例只是一个简单的演示，实际的DMA传输可能需要进行更多的处理和检查。同时，由于eBPF程序运行在内核中，因此需要特殊的权限才能够加载和运行。
+在xdp_prog函数中，可以实现DMA传输的代码。具体实现方式取决于所使用的DMA引擎和设备.
 
 ### 3.使用Prometheus+Grafana进行性能监控与测试
 
@@ -117,8 +153,12 @@ Grafana 是一个跨平台的开源的度量分析和可视化工具，可以通
 
 ## 创新点
 
-关键和首创的用eBPF实现一个减少数据拷贝次数的内核,同时用XDP提高系统的安全性 
+1. 使用eBPF技术实现DMA传输：传统的DMA传输是通过内核驱动程序实现的，而您的项目使用eBPF技术实现DMA传输，可以在内核态中实现DMA传输，从而减少数据拷贝次数，提高系统的性能。
 
+2. 使用XDP技术减少数据包处理的延迟和CPU占用率：XDP技术是一种高性能网络数据包处理技术，可以在网络驱动程序接收数据包时，使用eBPF程序来处理数据包，从而减少数据包处理的延迟和CPU占用率。通过结合XDP和eBPF技术，可以进一步提高系统的性能。
+
+3. 实现兼备DMA能力的内核：您的项目旨在实现一个兼备DMA能力的内核，这是一个非常有创新性的想法。通过使用eBPF和XDP技术，可以在内核态中实现DMA传输和数据包处理，从而减少数据拷贝次数和CPU占用率，提高系统的性能。
+   
 ## 计划步骤
 
 :one: 复现前辈的分布式文件系统并完成监控环境的部署 
@@ -131,9 +171,11 @@ Grafana 是一个跨平台的开源的度量分析和可视化工具，可以通
 
 ## 参考资料
 
-\[1] [一个讲后台文件IO的github仓库](https://github.com/spongecaptain/SimpleClearFileIO)
+\[1][DisGraFS](https://github.com/OSH-2021/x-DisGraFS)
 
-\[2] 调研报告.md
+\[2] [一个讲后台文件IO的github仓库](https://github.com/spongecaptain/SimpleClearFileIO)
+
+
 
 \[3] [XDP的github教程库](https://github.com/xdp-project/xdp-tutorial/)
 
