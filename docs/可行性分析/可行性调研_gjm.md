@@ -45,16 +45,16 @@
 
 ### linux存储及缓存结构
 
-![](pics/存储金字塔结构.webp)
+![](feasibility.assets/存储金字塔结构.webp)
 目前受限于存储设备的存取速率和硬件成本，现代计算机的存储结构呈现为金字塔型。越往塔顶，存取效率越高、但成本也越高，所以容量也就越小。上层一般作为下层的Cache层来使用。
-![](pics/内核态与用户态的缓存区.webp)
+![](feasibility.assets/内核态与用户态的缓存区.webp)
 用户态程序中可以使用许多跨平台封装好的文件操作函数，为了减少这些函数调用带来的系统调用成本，用户态具有自己的缓冲实现，若用户代码以较小规模不断的读或写文件的话，通过buffer对读写操作进行高度聚合是可以提高程序运行效率的。但是用户态缓冲区的存在并不总是带来效率的提高，当数据高频地在用户态和内核态之间进行传输时，用户态缓冲区作为必经之路的话会明显降低IO效率。此外，系统调用的read/write和真实存储设备之间也存在一层buffer，即Kernel buffer cache。
 
 在Linux下，文件的缓存习惯性称为Page Cache（内核页缓存），这与更低一级的设备内部缓存（Buffer Cache）相区别。 Page Cache和文件系统比较相关，文件系统负责将文件内容映射到实际的物理磁盘；Buffer Cache用于缓存存储设备块（比如磁盘扇区）的数据，而不关心是否有文件系统的存在（文件系统的元数据就缓存在Buffer Cache中）。
 
 ### linux内核中的IO读写方式
 
-![](pics/linux内核IO栈简图.webp)
+![](feasibility.assets/linux内核IO栈简图.webp)
 
 由图可见，从系统调用的接口再往下，Linux下的IO栈致大致有三个层次：
 
@@ -69,7 +69,7 @@ read(file_fd, tmp_buf, len);
 
 ### Page Cache
 
-![](pics/page_cache位置.webp)
+![](feasibility.assets/page_cache位置.webp)
 
 Page Cache 的本质是由 Linux 内核管理的内存区域。若数据曾经被访问过且被加载到page cache中，则下一次访问时无需通过磁盘I/O，直接命中内存缓存即可，可提高数据访问速度；Page cache还有预读能力，基于程序的局部性原理，通过一次I/O 将多页装入 Page Cache，能够减少磁盘 I/O 次数， 进而提高系统磁盘 I/O 吞吐量。但page cache也有其劣势，最直接的缺点是需要占用额外物理内存空间，在物理内存空间紧张时可能会导致频繁的 swap 操作，反而导致系统的磁盘 I/O 负载上升。
 
@@ -85,8 +85,8 @@ TCP/IP 协议框架体系内，我们一般将网络划分为五层，从下到�
 - 传输层：为应用程序之间提供端到端连接，主要为 TCP 和 UDP 协议。
 - 应用层：顾名思义，主要由应用程序提供，用来对传输数据进行语义解释的 “人机交互界面层”，比如 HTTP，SMTP，FTP 等协议。
 
-![](pics/linux内核网络协议栈的分层结构.webp)
-![](pics/linux内核网络协议栈.jpg)
+![](feasibility.assets/linux内核网络协议栈的分层结构.webp)
+![](feasibility.assets/linux内核网络协议栈.jpg)
 
 Linux内核网络协议栈涉及其中三层，分别为数据链路层、网络层和传输层，不涉及物理层，应用层的任务也是由用户空间程序来实现的。
 Linux内核网络协议栈和网络设备驱动程序为两个很重要的结构（sk_buff和net_device）。
@@ -104,7 +104,7 @@ Linux内核网络协议栈的任务：
 ### Docker容器化部署
 
 Docker 教程从入门到精通 <https://cloud.tencent.com/developer/article/1885678>
-![](pics/docker运行概览.jpeg)
+![](feasibility.assets/docker运行概览.jpeg)
 
 - Image ———— 一个特殊的文件系统（静态）
 
@@ -133,7 +133,7 @@ BPF程序的功能丰富度是和内核对BPF程序的支持**linux/kernel/bpf/*
 ### DPDK技术（流行kernel-bypass技术方案）
 
 DPDK(Data Plane Development Kit)是数据平面开发工具包，由能加速在各种CPU架构上运行的数据包处理库组成，是一种高性能抓包技术。传统的数据包捕获瓶颈往往在于Linux Kernel，数据流需要经过内核态和用户态数据拷贝的消耗，系统调用的消耗，中断处理的消耗等。
-![](pics/DPDK原理.webp)
+![](feasibility.assets/DPDK原理.webp)
 
 - （左边）：网卡 -> 驱动 -> 内核协议栈 -> Socket 接口 -> 业务。
 - （右边）：网卡 -> DPDK 轮询模式 -> DPDK 基础库 -> 业务。
@@ -164,7 +164,7 @@ DPDK技术虽然性能较高，但其缺点也显而易见：改变了现有操�
 
 XDP技术减少上下文切换次数的思路与DPDK不同，它将网络包处理流程放到了内核中位于网络协议栈之前的位置。这样，在处理网络数据包时，不用经历kernel/userspace context switching的代价，也不用经历网络协议栈的复杂流程，同时又保留了操作系统控制网络硬件的能力。目前XDP现在已经完全集成到了Linux内核中。
 
-![](pics/xdp实现.webp)
+![](feasibility.assets/xdp实现.webp)
 XDP系统由4个主要部分组成：
 
 - XDP driver hook：这是XDP程序的接入点，当网络数据包从硬件中收到时会被执行。
@@ -198,7 +198,7 @@ BPF maps有几个作用：
 
 ### zIO技术不同实现方式对比
 
-![](pics/传统IO.jpg)
+![](feasibility.assets/传统IO.jpg)
 
 在 Linux 中零拷贝技术主要有 3 个实现思路：用户态直接 I/O、减少数据拷贝次数以及写时复制技术（可忽略）。
 
