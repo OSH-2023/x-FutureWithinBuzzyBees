@@ -16,7 +16,7 @@
 
 ## 传统linuxIO过程
 
-![](whyebpf_pics/传统IO.jpg)
+![](why_assets/传统IO.jpg)
 
 - read() 和 write() 系统调用
 - 会产生多次用户态与进程态之间的上下文切换
@@ -24,21 +24,21 @@
 
 ## 现有可加速IO的系统调用函数
 
-![](whyebpf_pics/mmap.png)
+![](why_assets/mmap.png)
 
 - mmap：建立内核读缓冲区与用户空间缓冲区的虚拟内存映射
   优化读性能，无法优化写性能
   节省一次用户缓冲区与内核缓冲区间CPU拷贝
   内存映射可能导致内存不足或内存浪费
 
-![](whyebpf_pics/sendfile.jpg)
+![](why_assets/sendfile.jpg)
 
 - sendfile：数据可以直接在内核空间内部进行 I/O 传输
     避免数据在用户空间和内核空间之间的来回拷贝
     不可避免数据在内核缓冲区与网络缓冲区之间的拷贝
     用户无法对IO数据进行细粒度的文件操作
 
-![](whyebpf_pics/splice.jpg)
+![](why_assets/splice.jpg)
 
 - splice：在内核缓冲区和网络缓冲区之间建立管道
     避免数据在用户空间和内核空间之间的来回拷贝
@@ -52,7 +52,7 @@
     系统维护难
     安全性降低
 
-![](whyebpf_pics/xdp架构.jpg)
+![](why_assets/xdp架构.jpg)
 
 - XDP：在千兆/万兆网卡驱动程序中运行eBPF程序来对网卡数据流量进行优化、过滤和预处理
     没有提供与用户空间的直接交互方式
@@ -66,14 +66,14 @@
 - SPDK技术: 通过一些特定的API使用户程序可绕过内核直接访问存储设备地址空间和DMA引擎
     SPDK 技术开发门槛较高，且绕过操作系统内核会导致管理和维护困难。
 
-![](whyebpf_pics/xrp架构.png)
+![](why_assets/xrp架构.png)
 
 - XRP技术: 借鉴XDP的实现思路，将中间请求直接在 NVMe 驱动层进⾏重提交，避免经过冗长的存储栈路径
   XRP技术是近两年内提出的，技术发展尚未成熟，也并未与分布式文件系统相结合。
 
 ## ebpf的优势
 
-![](whyebpf_pics/ebpf参与的IO.jpg)
+![](why_assets/ebpf参与的IO.jpg)
 
 - ebpf map可以减少数据拷贝次数
 - ebpf可以减少用户态与内核态之间的上下文切换
