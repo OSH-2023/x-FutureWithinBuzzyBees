@@ -90,7 +90,7 @@ root@server:~/bcc/libbpf-tools# bpftool map list
 
    
 #### 附 
-[opensnoop源代码](./lzcassets/opensnoop.bpf.c)
+[opensnoop源代码](./lzc_assets/opensnoop.bpf.c)
 
 2.环境安装
 
