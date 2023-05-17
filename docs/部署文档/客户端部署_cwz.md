@@ -43,10 +43,28 @@ disgrafs://[redisUrl] [mountPoint] [wsUrl] [wsAuth]
 
 ![image-20230516144358116](./%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%83%A8%E7%BD%B2_cwz.assets/image-20230516144358116.png)
 
+先一键安装一下juiceFS:
+
+```bash
+curl -sSL https://d.juicefs.com/install | sh -
+```
+
+然后创建一下本地JuiceFS，请替换access和secretkey参考群公告（涉及安全问题）
+
+```bash
+juicefs format \
+    --storage oss \
+    --bucket https://disgrafs-prime.oss-cn-hangzhou.aliyuncs.com \
+    --access-key AAAAAAAAAAAAAAAAAAc \
+    --secret-key ssdadsadsadsadasdsadsadas0U \
+    redis://admin:passwd@disgrafs.redis.rds.aliyuncs.com:6379/1  \
+    myjfs
+```
+
 然后直接运行
 
 ```bash
-sudo juicefs mount redis://yiran:yiran_123@disgrafs.redis.rds.aliyuncs.com:6379/1 ~/Desktop/DisgraFS
+sudo juicefs mount redis://admin:passwd@disgrafs.redis.rds.aliyuncs.com:6379/1 ~/Desktop/DisgraFS
 ```
 
 成功后结果如下：
