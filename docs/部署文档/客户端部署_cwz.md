@@ -46,6 +46,12 @@ disgrafs://[redisUrl] [mountPoint] [wsUrl] [wsAuth]
 然后直接运行
 
 ```bash
-sudo ./DisGraFS-Client.py
+sudo juicefs mount redis://yiran:yiran_123@disgrafs.redis.rds.aliyuncs.com:6379/1 ~/Desktop/DisgraFS
 ```
+
+成功后结果如下：
+
+![image-20230517201917588](./%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%83%A8%E7%BD%B2_cwz.assets/image-20230517201917588.png)
+
+然后记得在网页中写自己的挂载路径，用户名可以用
 
