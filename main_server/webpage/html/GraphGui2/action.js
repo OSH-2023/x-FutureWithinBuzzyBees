@@ -19,7 +19,7 @@
         // FunctForm.setAttribute("method","post");      
 
         var Download = document.createElement("div");
-        Download.innerText = "打开文件";
+        Download.innerText = "下载文件";
         Download.setAttribute("style",DivStyle);
         
         if(decodeURIComponent(FS_postion)===""){
@@ -52,8 +52,8 @@
 }
     
     // 点击打开响应函数
-    function OpenAction(obj){
-        ws.send("{'command': 'open', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
+    function DownloadAction(obj){
+        ws.send("{'command': 'download', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
     }
     
     // // 点击取消响应函数
@@ -76,9 +76,9 @@
         display: inline-block;font-size: 16px;margin: 4px 2px;cursor: pointer;margin:40 auto;width:150px;";
         
         var Download = document.createElement("div");
-        Download.innerText = "打开文件";
+        Download.innerText = "下载文件";
         Download.setAttribute("style",DivStyle);
-        Download.setAttribute("onclick","OpenAction(this);");
+        Download.setAttribute("onclick","DownloadAction(this);");
         
         var Delete = document.createElement("div");
         Delete.innerText = "删除文件";

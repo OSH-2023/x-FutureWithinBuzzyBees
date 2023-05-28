@@ -8,14 +8,10 @@ def parse_exec(recv_text):
         print("Invalid input format")
         return
 
-    # 获取command和parameter参数
     command = signal.get("command")
     parameter = signal.get("parameter", [])
 
-    # 根据command参数调用相应的函数执行操作
-    if command == "open":
-        server_open(*parameter)
-    elif command == "delete":
+    if command == "delete":
         server_delete(*parameter)
     elif command == "download":
         server_download(*parameter)
@@ -24,9 +20,6 @@ def parse_exec(recv_text):
     else:
         print("Invalid command: ", command)
 
-def server_open(filename):
-    # 打开文件的操作
-    print("Opening file: ", filename)
 
 def server_delete(filename):
     # 删除文件的操作

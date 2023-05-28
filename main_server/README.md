@@ -11,7 +11,7 @@
 
 ### main server
 
-建议单开(如果你按照实际部署应该也是)一个用户存储main server相关文件,python依赖模块见/main_server/requirements.txt,建议
+建议单开一个用户(如果你按照实际部署应该也是)存储main server相关文件,python依赖模块见/main_server/requirements.txt,建议使用py虚拟环境或者docker容器
 
 
 服务器需部署neo4j图数据库，neo4j图数据库的端口请使用7474和7687（也即默认的两个端口），如果修改了部署的端口，请同步修改网页部分文件和服务器部分文件的对应端口描述。运行服务器端时使用
