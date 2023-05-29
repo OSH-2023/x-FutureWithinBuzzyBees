@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
     <title>DisGraFs</title>
@@ -42,229 +43,287 @@
             color: #8bb71a;
         }
 
-                /* 鼠标样式 */
+        /* 鼠标样式 */
         .ppt-result {
             cursor: pointer;
         }
     </style>
     <script src="login.js" charset="utf-8"></script>
 </head>
-<body style="background-color: #2e3138;" id = "main">
 
-<div class="navbar-fixed">
-    <nav style="background-color: #444951;">
-        <div class="nav-wrapper">
-            <form style="height:100%; margin-left: 8%; margin-right: 8%; background-color: #525863;"
-                  onsubmit="event.preventDefault(); return false;">
-                <div class="input-field">
-                    <input id="search" type="search" required>
-                    <label class="label-icon" for="search"><i
-                            class="ppt-icon ppt-icon-search-plus" style="color:#8bb71a;"></i></label>
+<body style="background-color: #2e3138;" id="main">
+
+    <div class="navbar-fixed">
+        <nav style="background-color: #444951;">
+            <div class="nav-wrapper">
+                <form style="height:100%; margin-left: 8%; margin-right: 8%; background-color: #525863;"
+                    onsubmit="event.preventDefault(); return false;">
+                    <div class="input-field">
+                        <input id="search" type="search" required>
+                        <label class="label-icon" for="search"><i class="ppt-icon ppt-icon-search-plus"
+                                style="color:#8bb71a;"></i></label>
+                    </div>
+                </form>
+                <a id="OpenClient"><button>启动客户端</button></a>
+                <button onclick="ExitClient();">关闭客户端</button>
+            </div>
+        </nav>
+
+    </div>
+
+    <div class="">
+        <ul id="collapsible-components" class="collapsible popout">
+            <!-- ======================================================================================================= -->
+            <!-- GRAPH QUERY-->
+            <!-- ======================================================================================================= -->
+            <li id="p-collapsible-popoto" class="active">
+                <div class="collapsible-header white-text" style="background-color: #525863; border-bottom: 0;"><i
+                        class="ppt-icon ppt-icon-logo" style="color:#8bb71a;"></i> Graph
+                    Query
                 </div>
-            </form>
-            <a id = "OpenClient"><button>启动客户端</button></a>
-            <button onclick = "ExitClient();">关闭客户端</button>
-        </div>
-    </nav>
-    
-</div>
-
-<div class="">
-    <ul id="collapsible-components" class="collapsible popout">
-        <!-- ======================================================================================================= -->
-        <!-- GRAPH QUERY-->
-        <!-- ======================================================================================================= -->
-        <li id="p-collapsible-popoto" class="active">
-            <div class="collapsible-header white-text" style="background-color: #525863; border-bottom: 0;"><i
-                    class="ppt-icon ppt-icon-logo" style="color:#8bb71a;"></i> Graph
-                Query
-            </div>
-            <div class="collapsible-body no-padding" style="height: 600px; border-bottom: 0;">
-                <div id="popoto-graph" class="ppt-div-graph">
-                </div>
-            </div>
-        </li>
-        <!-- ======================================================================================================= -->
-        <!-- RESULTS -->
-        <!-- ======================================================================================================= -->
-        <li id="p-collapsible-results" class="active">
-            <div class="collapsible-header white-text" style="background-color: #525863;border-bottom: 0;"><i
-                    class="ppt-icon ppt-icon-sort-alpha-asc" style="color:#8bb71a;"></i>Results&nbsp;
-                <span class="" id="result-total-count">0</span>
-            </div>
-            <div class="collapsible-body no-padding" style="border-bottom: 0;">
-                <div class="row">
-                    <div id="popoto-results" class="col s12 cards-container">
-
+                <div class="collapsible-body no-padding" style="height: 600px; border-bottom: 0;">
+                    <div id="popoto-graph" class="ppt-div-graph">
                     </div>
                 </div>
-            </div>
-        </li>
-    </ul>
+            </li>
+            <!-- ======================================================================================================= -->
+            <!-- RESULTS -->
+            <!-- ======================================================================================================= -->
+            <li id="p-collapsible-results" class="active">
+                <div class="collapsible-header white-text" style="background-color: #525863;border-bottom: 0;"><i
+                        class="ppt-icon ppt-icon-sort-alpha-asc" style="color:#8bb71a;"></i>Results&nbsp;
+                    <span class="" id="result-total-count">0 &nbsp</span>
+                    <span> &nbsp</span>
+                    <!-- 添加一个按钮元素 上传-->
+                    <button id="upload-btn" class="btn">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2"
+                            fill="none" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        上传文件
+                    </button>
+                </div>
 
-</div>
+                <div class="collapsible-body no-padding" style="border-bottom: 0;">
+                    <div class="row">
+                        <div id="popoto-results" class="col s12 cards-container">
 
-<script src="./node_modules/jquery/dist/jquery.min.js" charset="utf-8"></script>
-<script src="./node_modules/d3/dist/d3.min.js" charset="utf-8"></script>
-<script src="./node_modules/popoto/dist/popoto.js" charset="utf-8"></script>
-<script src="./node_modules/materialize-css/dist/js/materialize.min.js"></script>
-<script src="js/auto-complete.js"></script>
-<script src="js/main.js"></script>
-<script>
-    // Demo Neo4j database settings hosted on GrapheneDb
-    popoto.rest.CYPHER_URL = "http://121.41.165.179:7474/db/data/transaction/commit";
-    popoto.rest.AUTHORIZATION = "Basic " + btoa("neo4j:DCchengding2003");
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
 
-    popoto.graph.WHEEL_ZOOM_ENABLED = false;
+    </div>
 
-    popoto.provider.node.Provider = {
-        "FILE": {
-            returnAttributes: ["name", "id", "size"],
-            constraintAttribute: "name",
-            "resultOrderByAttribute": "name",
-            "valueOrderByAttribute": "name",
-            "isValueOrderAscending": true,
-            getDisplayType: function (node) {
-                return popoto.provider.node.DisplayTypes.IMAGE;
-            },
-            "getImagePath": function (node) {
-                // if (node.type === popoto.graph.node.NodeTypes.VALUE) {
-                //     return "../material/person/" + node.attributes['name'] + ".jpg"
-                // } else if (node.hasOwnProperty("value") && node.value.length > 0) {
-                //     return "../material/person/" + node.value[0].attributes['name'] + ".jpg"
-                // }
-                return 'image/node/person/person.svg';
-            },
-            "displayResults": function (pResultElmt) {
+    <script src="./node_modules/jquery/dist/jquery.min.js" charset="utf-8"></script>
+    <script src="./node_modules/d3/dist/d3.min.js" charset="utf-8"></script>
+    <script src="./node_modules/popoto/dist/popoto.js" charset="utf-8"></script>
+    <script src="./node_modules/materialize-css/dist/js/materialize.min.js"></script>
+    <script src="js/auto-complete.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // 选择要上传的文件
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.md,.mp4";
+        input.multiple = true;
 
-                var div1 = pResultElmt.append("div").attr("style", "display: flex;");
-                div1.append("img")
-                    .attr("height", "100px")
-                    .attr("src", function (result) {
-                        return 'image/node/person/person.svg';
-                        // return "../material/person/" + result.attributes.name + ".jpg";
-                    });
+        // 当按钮被点击时触发文件选择器
+        const uploadBtn = document.getElementById("upload-btn");
+        uploadBtn.addEventListener("click", () => {
+            input.click();
+        });
 
-                var div = div1.append("div").attr("style", "margin-left: 20px;");
-                // An <h3> element containing the person name
-                div.append("h6")
-                    .text(function (result) {
-                        return result.attributes.name;
-                    });
+        input.addEventListener("change", function () {
+            console.log(input.files);
+        });
 
-                // A <span> element with the computed age from born attribute
-                div.filter(function (result) {
-                    // Filter on attribute having born attribute value
-                    return result.attributes.size;
-                }).append("span").text(function (result) {
-                    return "Size: " + result.attributes.size;
-                });
+        input.addEventListener("change", function () {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
 
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                formData.append("files[]", file);
             }
-        },
-        "Label": {
-            "returnAttributes": ["name"],
-            "constraintAttribute": "name",
-            "resultOrderByAttribute": "name",
-            "valueOrderByAttribute": "name",
-            "isValueOrderAscending": true,
-            "getDisplayType": function (node) {
-                return popoto.provider.node.DisplayTypes.IMAGE;
-            },
-            "getImagePath": function (node) {
-                // if (node.type === popoto.graph.node.NodeTypes.VALUE) {
-                //     return "../material/movie/" + node.attributes['title'] + ".jpg"
-                // } else if (node.hasOwnProperty("value") && node.value.length > 0) {
-                //     return "../material/movie/" + node.value[0].attributes['title'] + ".jpg"
-                // }
-                return 'image/node/movie/movie.svg';
-            },
-            "displayResults": function (pResultElmt) {
 
-                var div1 = pResultElmt.append("div").attr("style", "display: flex;");
-                div1.append("img")
-                    .attr("height", "100px")
-                    .attr("src", function (result) {
-                        return 'image/node/movie/movie.svg';
-                    });
-
-                var div = div1.append("div").attr("style", "margin-left: 20px;");
-                // An <h3> element containing the movie title
-                div.append("h4")
-                    .attr("style", "margin-top: 0;")
-                    .text(function (result) {
-                        return result.attributes.name;
-                    });
-
-                // // A <span> element with the movie tagline
-                // div.append("div").filter(function (result) {
-                //     // Filter on attribute having born attribute value
-                //     return result.attributes.tagline;
-                // }).append("span").text(function (result) {
-                //     return result.attributes.tagline;
-                // });
-
-                // // A <span> element with the release date
-                // div.append("div").filter(function (result) {
-                //     // Filter on attribute having born attribute value
-                //     return result.attributes.released;
-                // }).append("span").text(function (result) {
-                //     return "Release date: " + result.attributes.released;
-                // });
-
-            }
-        }
-    };
-
-    popoto.provider.link.Provider = {
-
-        // Customize the text displayed on links:
-        "getTextValue": function (link) {
-            if (link.type === popoto.graph.link.LinkTypes.RELATION || link.type === popoto.graph.link.LinkTypes.SEGMENT) {
-
-                var targetName = "";
-                if (link.type === popoto.graph.link.LinkTypes.SEGMENT) {
-                    targetName = " " + popoto.provider.node.getTextValue(link.target);
-                }
-                return link.label;
-            } else {
-                return "";
-            }
-        }
-
-    };
-    popoto.result.onTotalResultCount(function (count) {
-        document.getElementById("result-total-count").innerHTML = "(" + count + ")";
-    });
-
-
-    function initCollapsible() {
-
-        var element = document.querySelector('#collapsible-components');
-        var collapsible = new M.Collapsible(element,
-            {
-                accordion: false,
-                onOpenEnd: function (el) {
-                    var id = el.id;
-                    if (id === "p-collapsible-popoto") {
-                        if (popoto.graph.getRootNode() !== undefined) {
-                            popoto.graph.getRootNode().px = $('#p-collapsible-popoto').width() / 2;
-                            popoto.graph.getRootNode().py = 300;
-                            popoto.updateGraph();
-                        }
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log("文件上传成功！");
+                    } else {
+                        console.error("文件上传失败！");
                     }
-                },
-                onCloseEnd: function (el) {
                 }
-            });
-    }
+            };
+            //记得改 ip地址 和端口号
+            // 后端记得解析formdata
+            var url = "http://localhost:8080/upload"; 
+            console.log("Sending request to:", url); //调试信息
+            //console.log(formData);
+            // 发送文件上传请求
+            xhr.open("POST", url);
+            xhr.send(formData);
+        });
+    </script>
 
-    initCollapsible();
+    <script>
+        // Demo Neo4j database settings hosted on GrapheneDb
+        popoto.rest.CYPHER_URL = "http://121.41.165.179:7474/db/data/transaction/commit";
+        popoto.rest.AUTHORIZATION = "Basic " + btoa("neo4j:DCchengding2003");
 
-    popoto.start("FILE");
+        popoto.graph.WHEEL_ZOOM_ENABLED = false;
 
-</script>
-<script src="ui.js" charset="utf-8"></script>
-<script src="action.js" charset="utf-8"></script>
+        popoto.provider.node.Provider = {
+            "FILE": {
+                returnAttributes: ["name", "id", "size"],
+                constraintAttribute: "name",
+                "resultOrderByAttribute": "name",
+                "valueOrderByAttribute": "name",
+                "isValueOrderAscending": true,
+                getDisplayType: function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+                },
+                "getImagePath": function (node) {
+                    // if (node.type === popoto.graph.node.NodeTypes.VALUE) {
+                    //     return "../material/person/" + node.attributes['name'] + ".jpg"
+                    // } else if (node.hasOwnProperty("value") && node.value.length > 0) {
+                    //     return "../material/person/" + node.value[0].attributes['name'] + ".jpg"
+                    // }
+                    return 'image/node/person/person.svg';
+                },
+                "displayResults": function (pResultElmt) {
+
+                    var div1 = pResultElmt.append("div").attr("style", "display: flex;");
+                    div1.append("img")
+                        .attr("height", "100px")
+                        .attr("src", function (result) {
+                            return 'image/node/person/person.svg';
+                            // return "../material/person/" + result.attributes.name + ".jpg";
+                        });
+
+                    var div = div1.append("div").attr("style", "margin-left: 20px;");
+                    // An <h3> element containing the person name
+                    div.append("h6")
+                        .text(function (result) {
+                            return result.attributes.name;
+                        });
+
+                    // A <span> element with the computed age from born attribute
+                    div.filter(function (result) {
+                        // Filter on attribute having born attribute value
+                        return result.attributes.size;
+                    }).append("span").text(function (result) {
+                        return "Size: " + result.attributes.size;
+                    });
+
+                }
+            },
+            "Label": {
+                "returnAttributes": ["name"],
+                "constraintAttribute": "name",
+                "resultOrderByAttribute": "name",
+                "valueOrderByAttribute": "name",
+                "isValueOrderAscending": true,
+                "getDisplayType": function (node) {
+                    return popoto.provider.node.DisplayTypes.IMAGE;
+                },
+                "getImagePath": function (node) {
+                    // if (node.type === popoto.graph.node.NodeTypes.VALUE) {
+                    //     return "../material/movie/" + node.attributes['title'] + ".jpg"
+                    // } else if (node.hasOwnProperty("value") && node.value.length > 0) {
+                    //     return "../material/movie/" + node.value[0].attributes['title'] + ".jpg"
+                    // }
+                    return 'image/node/movie/movie.svg';
+                },
+                "displayResults": function (pResultElmt) {
+
+                    var div1 = pResultElmt.append("div").attr("style", "display: flex;");
+                    div1.append("img")
+                        .attr("height", "100px")
+                        .attr("src", function (result) {
+                            return 'image/node/movie/movie.svg';
+                        });
+
+                    var div = div1.append("div").attr("style", "margin-left: 20px;");
+                    // An <h3> element containing the movie title
+                    div.append("h4")
+                        .attr("style", "margin-top: 0;")
+                        .text(function (result) {
+                            return result.attributes.name;
+                        });
+
+                    // // A <span> element with the movie tagline
+                    // div.append("div").filter(function (result) {
+                    //     // Filter on attribute having born attribute value
+                    //     return result.attributes.tagline;
+                    // }).append("span").text(function (result) {
+                    //     return result.attributes.tagline;
+                    // });
+
+                    // // A <span> element with the release date
+                    // div.append("div").filter(function (result) {
+                    //     // Filter on attribute having born attribute value
+                    //     return result.attributes.released;
+                    // }).append("span").text(function (result) {
+                    //     return "Release date: " + result.attributes.released;
+                    // });
+
+                }
+            }
+        };
+
+        popoto.provider.link.Provider = {
+
+            // Customize the text displayed on links:
+            "getTextValue": function (link) {
+                if (link.type === popoto.graph.link.LinkTypes.RELATION || link.type === popoto.graph.link.LinkTypes.SEGMENT) {
+
+                    var targetName = "";
+                    if (link.type === popoto.graph.link.LinkTypes.SEGMENT) {
+                        targetName = " " + popoto.provider.node.getTextValue(link.target);
+                    }
+                    return link.label;
+                } else {
+                    return "";
+                }
+            }
+
+        };
+        popoto.result.onTotalResultCount(function (count) {
+            document.getElementById("result-total-count").innerHTML = "(" + count + ")";
+        });
+
+
+        function initCollapsible() {
+
+            var element = document.querySelector('#collapsible-components');
+            var collapsible = new M.Collapsible(element,
+                {
+                    accordion: false,
+                    onOpenEnd: function (el) {
+                        var id = el.id;
+                        if (id === "p-collapsible-popoto") {
+                            if (popoto.graph.getRootNode() !== undefined) {
+                                popoto.graph.getRootNode().px = $('#p-collapsible-popoto').width() / 2;
+                                popoto.graph.getRootNode().py = 300;
+                                popoto.updateGraph();
+                            }
+                        }
+                    },
+                    onCloseEnd: function (el) {
+                    }
+                });
+        }
+
+        initCollapsible();
+
+        popoto.start("FILE");
+
+    </script>
+    <script src="ui.js" charset="utf-8"></script>
+    <script src="action.js" charset="utf-8"></script>
 </body>
+
 </html>
