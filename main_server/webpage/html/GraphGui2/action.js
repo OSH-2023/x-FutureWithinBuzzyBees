@@ -53,7 +53,8 @@
     
     // 点击打开响应函数
     function DownloadAction(obj){
-        ws.send("{'command': 'download', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
+        //console.log(obj.parentNode);
+        ws.send("{download,"+obj.parentNode.__data__.attributes.id+','+obj.parentNode.__data__.attributes.name+"}");
     }
     
     // // 点击取消响应函数
@@ -66,7 +67,8 @@
     
     // 点击删除响应函数
     function DeleteAction(obj){
-        ws.send("{'command': 'delete', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
+        //ws.send("{'command': 'delete', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
+        ws.send("{delete,"+obj.parentNode.__data__.attributes.id+','+obj.parentNode.__data__.attributes.name+"}");
         alert("删除成功");
     }
 

@@ -67,7 +67,10 @@ async def main_logic(websocket, path):
             while True:
                 recv_text = await websocket.recv()
                 print(tag_split,"：",recv_text)
-                parse_exec(recv_text)
+
+                #解析网页端发来的命令
+                cmd_dict = eval(recv_text)
+                print(cmd_dict)
 
                 if client_array[client_index].index_client == 1: 
                     await client_array[client_index].client_websocket.send(recv_text)
