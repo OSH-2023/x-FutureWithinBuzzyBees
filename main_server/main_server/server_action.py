@@ -1,3 +1,13 @@
+#处理mainserver接收到网页端对文件的操作指令
+
+import os
+import sys
+import socket
+import json
+import time
+import asyncio
+import websockets
+import pytoneo
 
 #解析并执行指令
 def parse_exec(recv_text):
@@ -27,4 +37,5 @@ def server_delete(filename):
 
 def server_download(filename):
     # 下载文件的操作
-    print("Downloading file")
+    print("Downloading file: ", filename)
+
