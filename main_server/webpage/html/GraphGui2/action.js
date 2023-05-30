@@ -54,7 +54,10 @@
     // 点击打开响应函数
     function DownloadAction(obj){
         //console.log(obj.parentNode);
-        ws.send("{download,"+obj.parentNode.__data__.attributes.id+','+obj.parentNode.__data__.attributes.name+"}");
+        const id = obj.parentNode.__data__.attributes.id;
+        const name = obj.parentNode.__data__.attributes.name;
+        const message = JSON.stringify({ command: "download", parameter: [id, name] });
+        ws.send(message);
     }
     
     // // 点击取消响应函数
@@ -68,7 +71,10 @@
     // 点击删除响应函数
     function DeleteAction(obj){
         //ws.send("{'command': 'delete', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
-        ws.send("{delete,"+obj.parentNode.__data__.attributes.id+','+obj.parentNode.__data__.attributes.name+"}");
+        const id = obj.parentNode.__data__.attributes.id;
+        const name = obj.parentNode.__data__.attributes.name;
+        const message = JSON.stringify({ command: "delete", parameter: [id, name] });
+        ws.send(message);
         alert("删除成功");
     }
 
