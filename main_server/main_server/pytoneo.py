@@ -11,6 +11,11 @@ class App:
     def close(self):
         
         self.driver.close()
+    
+    def find_file(self, filename):
+        with self.driver.session() as session:
+            result = session.read_transaction(self._find_and_return_file, filename)
+            return result
 
     def create_newnode(self, newnode):
         with self.driver.session() as session:
@@ -32,7 +37,7 @@ class App:
                 session.write_transaction(
                     self._create_and_return_relationship, labelname, result[0],i)
                 i=i+1
-
+            
 
     def create_labelnode(self, labelname):
         with self.driver.session() as session:
@@ -52,6 +57,20 @@ class App:
     def delete_all(self):
         with self.driver.session() as session:
             session.write_transaction(self._delete_all)
+    
+    @staticmethod
+    def _find_and_return_file(tx, filename):
+        query = (
+            "MATCH (n:FILE) WHERE n.name = $filename "
+            "RETURN properties(n) AS properties"
+        )
+        result = tx.run(query, filename=filename)
+        record = result.single()
+        if record:
+            properties = record["properties"]
+            return properties
+        else:
+            return []
 
     @staticmethod
     def _createnamenode(tx,id):

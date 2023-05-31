@@ -1,8 +1,27 @@
 import asyncio
 import websockets
 import time
+import os
 import pytoneo
 from server_action import parse_exec
+# from flask import Flask, request, send_file
+
+# app = Flask(__name__)
+
+# @app.route('/download', methods=['GET'])
+# def download():
+#     file_path = request.args.get('file', '')
+    
+#     # 构建完整的文件系统路径
+#     full_path = file_path
+
+#     # 检查文件是否存在
+#     if os.path.isfile(full_path):
+#         # 返回文件给客户端
+#         return send_file(full_path, as_attachment=True)
+
+#     # 文件不存在
+#     return 'File not found', 404
 
 class client_struct:
     username            = 0
@@ -68,14 +87,46 @@ async def main_logic(websocket, path):
                 recv_text = await websocket.recv()
                 print(tag_split,"：",recv_text)
 
-                #解析网页端发来的命令
+                #解析网页端发来的命令 
                 cmd_dict = eval(recv_text)
-                print(cmd_dict)
+                # e.g cmd_dict = {'command': 'download', 'parameter': [7, '1_实验报告模板.md']}
+                # cmd_dict['parameter'][0] = 7 代表节点id
+                
+                # 处理下载命令
+                if cmd_dict['command'] == 'download':
+                    # 从数据库中找到对应文件
+                    file = Neo4jServer.find_file(cmd_dict['parameter'][1])
+                    file_path = file['path']
+                    # /root/jfs -> /var/www/html/jfs
+                    file_path = file_path.replace('/root/jfs', '/var/www/html/jfs')
+                    if os.path.isfile(file_path):
+                        # 构建下载链接/var/www/html/jfs -> /jfs
+                        download_link =file_path.replace('/var/www/html', '')
+                        # 发送下载链接给客户端
+                        await websocket.send(download_link)
+                    else:
+                        await websocket.send('file not found')
 
+                # 处理删除命令
+                elif cmd_dict['command'] == 'delete':
+                    # 从数据库中找到对应文件
+                    file = Neo4jServer.find_file(cmd_dict['parameter'][1])
+                    file_path = file['path']
+                    # /root/jfs -> /var/www/html/jfs
+                    file_path = file_path.replace('/root/jfs', '/var/www/html/jfs')
+                    if os.path.isfile(file_path):
+                        os.remove(file_path)
+                        # 删除数据库中的文件
+                        Neo4jServer.delete_node(file['name'])
+                        await websocket.send('delete success')
+                    else:
+                        await websocket.send('file not found')
+
+                
                 if client_array[client_index].index_client == 1: 
                     await client_array[client_index].client_websocket.send(recv_text)
-                else:
-                    await websocket.send("no_client")
+                # else:
+                #     await websocket.send("no_client")
         
         #客户端连接逻辑            
         elif tag_split[1] == "client":
@@ -215,6 +266,9 @@ if __name__ == "__main__":
     #启动webserver服务器
     start_server = websockets.serve(main_logic, '0.0.0.0', 9090)
     print("主服务器初始化成功，等待连接...")
+
+    # app.run(host='0.0.0.0', port=8080, debug=True)
+    # print("下载服务器初始化成功，等待连接...")
     
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()

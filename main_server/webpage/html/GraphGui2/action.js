@@ -58,9 +58,25 @@
         const name = obj.parentNode.__data__.attributes.name;
         const message = JSON.stringify({ command: "download", parameter: [id, name] });
         ws.send(message);
+        // server发送的信息：
+        //     download_link = '/download?file=' + file_path
+        //     # 发送下载链接给客户端
+        //     await websocket.send(download_link)
+        // else:
+        //     await websocket.send('file not found') 
     }
     
     // // 点击取消响应函数
+    ws.onmessage = function (evt) {
+        const download_link = evt.data;
+        if (download_link === "file not found") {
+            alert("文件不存在");
+        } 
+        //判断是否是/download?file=开头的字符串
+        if (download_link.indexOf("/jfs") === 0) {
+            window.open(download_link);
+        }
+    }
     // function CancelAction(obj){
     //     obj.parentNode.setAttribute("onclick", "FileMenuGet(this)");
     //     obj.parentNode.children[1].style.display = "none";
@@ -75,7 +91,19 @@
         const name = obj.parentNode.__data__.attributes.name;
         const message = JSON.stringify({ command: "delete", parameter: [id, name] });
         ws.send(message);
-        alert("删除成功");
+        // server发送的信息：
+        //     await websocket.send('delete success')
+        // else:
+        //     await websocket.send('file not found')
+        ws.onmessage = function (evt) {
+            const delete_result = evt.data;
+            if (delete_result === "file not found") {
+                alert("文件不存在");
+            } else {
+                alert("删除成功");
+                obj.parentNode.parentNode.removeChild(obj.parentNode);
+            }
+        }
     }
 
     function FileMenuGet(obj){
