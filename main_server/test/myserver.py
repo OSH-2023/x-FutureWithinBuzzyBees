@@ -1,46 +1,54 @@
-#本地测试文件
-import cgi
+import asyncio
+import json
+import websockets
 import os
-import http.server
-import socketserver
 
-# 定义上传文件保存目录
-UPLOAD_DIR = "D:/code/disgraFS/upload"
 
-# 定义一个请求处理类，用于处理文件上传请求
-class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def end_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        http.server.SimpleHTTPRequestHandler.end_headers(self)
+UPLOAD_DIR = 'D:/code/disgraFS/upload/'
+async def upload(websocket, path):
+    try:
+        # 接收元数据
+        metadata_str = await websocket.recv()
+        metadata = json.loads(metadata_str)
 
-    def do_POST(self):
-        content_length = int(self.headers["Content-Length"])
-        form = cgi.FieldStorage(
-            fp=self.rfile,
-            headers=self.headers,
-            environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers["Content-Type"]}
-        )
+        print(f"已接收到元数据：{metadata}")
 
-        for field in form.keys():
-            field_item = form[field]
-            if field_item.filename:
-                # 获取上传的文件名和文件内容
-                filename = os.path.basename(field_item.filename)
-                filecontent = field_item.file.read()
+                # 创建文件路径，根据需要修改保存路径
+        save_path = f"{UPLOAD_DIR}{metadata['name']}"
 
-                # 将文件保存到指定目录中
-                filepath = os.path.join(UPLOAD_DIR, filename)
-                with open(filepath, "wb") as f:
-                    f.write(filecontent)
+        print(f"文件保存路径：{save_path}")
 
-                # 输出调试信息
-                print("文件已保存到:", filepath)
+        # 检查文件夹是否存在，如果不存在则创建它
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"File uploaded successfully!")
+        # 检查文件名是否正确
+        if not os.path.basename(save_path) == metadata['name']:
+            raise Exception("文件名不正确")
 
-# 启动服务器
-with socketserver.TCPServer(("", 8000), MyRequestHandler) as httpd:
-    print("Server started at port 8000")
-    httpd.serve_forever()
+        # 检查文件权限
+        if not os.access(os.path.dirname(save_path), os.W_OK):
+            raise Exception("没有写入权限")
+        # 创建文件并写入内容
+        with open(save_path, 'wb') as file:
+            while True:
+                # 接收文件内容
+                data = await websocket.recv()
+                if not data:
+                    break
+                file.write(data)
+
+        print(f"已成功上传文件：{metadata['name']}")
+        print(f"文件类型：{metadata['type']}")
+        print(f"文件大小：{metadata['size']} bytes")
+
+    except websockets.exceptions.ConnectionClosedError:
+        print("连接已关闭")
+    except json.JSONDecodeError:
+        print("无效的元数据格式")
+    except Exception as e:
+        print(f"上传文件时出现错误：{e}")
+
+start_server = websockets.serve(upload, 'localhost', 9998)
+
+asyncio.get_event_loop().run_until_complete(start_server)
+asyncio.get_event_loop().run_forever()

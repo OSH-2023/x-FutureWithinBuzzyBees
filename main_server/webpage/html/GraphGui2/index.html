@@ -123,50 +123,75 @@
     <script src="js/auto-complete.js"></script>
     <script src="js/main.js"></script>
     <script>
-        // 选择要上传的文件
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.md,.mp4";
-        input.multiple = true;
-
         // 当按钮被点击时触发文件选择器
         const uploadBtn = document.getElementById("upload-btn");
         uploadBtn.addEventListener("click", () => {
             input.click();
         });
-
-        input.addEventListener("change", function () {
-            console.log(input.files);
-        });
-
-        input.addEventListener("change", function () {
-            const xhr = new XMLHttpRequest();
-            const formData = new FormData();
-
-            for (let i = 0; i < input.files.length; i++) {
-                const file = input.files[i];
-                formData.append("files[]", file);
+        // 定义一个上传文件的函数
+        function uploadFile(file) {
+            // 返回一个Promise对象
+            return new Promise((resolve, reject) => {
+                // 创建WebSocket连接
+                const socket = new WebSocket('ws://localhost:9998/upload');
+    
+                // 监听WebSocket连接事件
+                socket.addEventListener('open', () => {
+                    // 文件元数据
+                    const metadata = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size
+                    };
+    
+                    // 发送元数据
+                    socket.send(JSON.stringify(metadata));
+    
+                    // 创建一个FileReader对象
+                    const reader = new FileReader();
+    
+                    // 当读取完成时，发送文件内容
+                    reader.onload = () => {
+                        socket.send(reader.result);
+                        socket.close(); // 上传完成后关闭连接
+                        console.log(`已成功上传文件：${file.name}`);
+                        console.log(`文件类型：${file.type}`);
+                        console.log(`文件大小：${file.size} bytes`);
+                        resolve(); // 解析Promise对象
+                    };
+    
+                    // 读取文件内容
+                    reader.readAsArrayBuffer(file);
+                    });
+    
+                    // 监听WebSocket错误事件
+                    socket.addEventListener('error', (error) => {
+                        console.error(`上传文件时出现错误：${error}`);
+                        reject(error); // 解析Promise对象
+                    });
+                });
             }
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        console.log("文件上传成功！");
-                    } else {
-                        console.error("文件上传失败！");
-                    }
+    
+            // 获取文件选择器元素
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".jpg,.jpeg,.png,.gif,.md,.mp3,.mp4";  // 限制选择的文件类型
+    
+            // 当文件选择器的值发生改变时触发文件上传
+            input.addEventListener("change", () => {
+                const file = input.files[0];
+                if (file) {
+                    uploadFile(file)
+                        .then(() => {
+                            console.log("文件上传成功！");
+                        })
+                        .catch((error) => {
+                            console.error("文件上传失败：", error);
+                        });
                 }
-            };
-            //记得改 ip地址 和端口号
-            // 后端记得解析formdata
-            var url = "http://localhost:8080/upload"; 
-            console.log("Sending request to:", url); //调试信息
-            //console.log(formData);
-            // 发送文件上传请求
-            xhr.open("POST", url);
-            xhr.send(formData);
-        });
-    </script>
+            });
+
+        </script>
 
     <script>
         // Demo Neo4j database settings hosted on GrapheneDb
