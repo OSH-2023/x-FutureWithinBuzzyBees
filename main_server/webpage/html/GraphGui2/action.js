@@ -85,26 +85,24 @@
     // }
     
     // 点击删除响应函数
-    function DeleteAction(obj){
-        //ws.send("{'command': 'delete', 'parameter': ['"+ obj.parentNode.children[0].children[1].children[0].innerText +"']}");
+    function DeleteAction(obj) {
         const id = obj.parentNode.__data__.attributes.id;
         const name = obj.parentNode.__data__.attributes.name;
         const message = JSON.stringify({ command: "delete", parameter: [id, name] });
         ws.send(message);
-        // server发送的信息：
-        //     await websocket.send('delete success')
-        // else:
-        //     await websocket.send('file not found')
+    
         ws.onmessage = function (evt) {
             const delete_result = evt.data;
             if (delete_result === "file not found") {
                 alert("文件不存在");
             } else {
                 alert("删除成功");
-                obj.parentNode.parentNode.removeChild(obj.parentNode);
+                // 刷新网页
+                location.reload();
             }
         }
     }
+    
 
     function FileMenuGet(obj){
         
