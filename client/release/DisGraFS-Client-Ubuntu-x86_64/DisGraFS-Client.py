@@ -35,7 +35,7 @@ if __name__ == "__main__":
     cwd = sys.argv[0]
 
     cwd = cwd[:len(cwd) - len("DisGraFS-Client.py")]
-    redisUrl = "redis://yiran:yiran_123@disgrafs.redis.rds.aliyuncs.com:6379/1"
+    redisUrl = "redis://admin:passwd@disgrafs.redis.rds.aliyuncs.com:6379/1"
     mountPointNoSlash = "/home/yiran/Desktop/DisgraFS"
     mountPointSlash = "/home/yiran/Desktop/DisgraFS/"
     wsUrl = "ws://121.41.165.179:9090"
