@@ -98,10 +98,11 @@ async def main_logic(websocket, path):
                         # 从数据库中找到对应文件
                         file = Neo4jServer.find_file(cmd_dict['parameter'][1])
                         file_path = file['path']
+                        # /root/jfs -> /var/www/html/jfs
+                        file_path = file_path.replace('/root/jfs', '/var/www/html/jfs')
                         if os.path.isfile(file_path):
-                            # 构建下载链接
-                            download_link = '/download?file=' + file_path
-
+                            # 构建下载链接/var/www/html/jfs -> /jfs
+                            download_link =file_path.replace('/var/www/html', '')
                             # 发送下载链接给客户端
                             await websocket.send(download_link)
                         else:
@@ -112,17 +113,22 @@ async def main_logic(websocket, path):
                         # 从数据库中找到对应文件
                         file = Neo4jServer.find_file(cmd_dict['parameter'][1])
                         file_path = file['path']
+                        # /root/jfs -> /var/www/html/jfs
+                        file_path = file_path.replace('/root/jfs', '/var/www/html/jfs')
                         if os.path.isfile(file_path):
                             os.remove(file_path)
                             # 删除数据库中的文件
                             Neo4jServer.delete_node(file['name'])
                             await websocket.send('delete success')
                         else:
+                            # 删除数据库中的文件
+                            Neo4jServer.delete_node(file['name'])
                             await websocket.send('file not found')
 
-                    
-                    if client_array[client_index].index_client == 1: 
-                        await client_array[client_index].client_websocket.send(recv_text)
+                    # 检查客户端是否在线
+                    if client_index < client_num:
+                        if client_array[client_index].index_client == 1: 
+                            await client_array[client_index].client_websocket.send(recv_text)
                     # else:
                     #     await websocket.send("no_client")
             
