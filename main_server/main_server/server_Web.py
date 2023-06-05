@@ -262,19 +262,27 @@ async def main_logic(websocket, path):
             # 检查文件夹是否存在，如果不存在则创建它
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
+            print(1)
+
             # 检查是否有同名文件，如果有则重命名
             if os.path.exists(save_path):
                 renamed_save_path = f"{UPLOAD_DIR}{uuid.uuid4().hex}_{metadata['name']}"
                 print(f"文件已存在，重命名为：{renamed_save_path}")
                 await websocket.send(f"文件已重命名为：{os.path.basename(renamed_save_path)}")
+            
+            print(2)
 
             # 检查文件名是否正确
             if not os.path.basename(save_path) == metadata['name']:
                 raise Exception("文件名不正确")
+            
+            print(3)
 
             # 检查文件权限
             if not os.access(os.path.dirname(save_path), os.W_OK):
                 raise Exception("没有写入权限")
+            
+            print(4)
             # 创建文件并写入内容
             with open(save_path, 'wb') as file:
                 while True:
@@ -284,8 +292,11 @@ async def main_logic(websocket, path):
                         break
                     file.write(data)
             
+            print(5)
             # 向客户端发送上传成功的消息
             await websocket.send("上传成功")
+
+            print(6)
 
             # 向打标服务器发送指令
             if tag_num == 0:
@@ -312,9 +323,9 @@ async def main_logic(websocket, path):
             # 等待直到数据库中对应节点打标后更新完成
             if not tag_num == 0:
                 while True:
-                    if not Neo4jServer.check_node(metadata['name']):
+                    if not Neo4jServer.find_file(metadata['name']):
                         print("数据库中已更新")
-                        websocket.send("打标成功")
+                        await websocket.send("打标成功")
                         break
                     else:
                         await asyncio.sleep(1)
