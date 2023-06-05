@@ -9,8 +9,10 @@ from tinytag import TinyTag
 from pydub import AudioSegment
 import ray
 import requests
+import time
 
-ray.init(address="auto", _redis_password='5241590000000000')
+if not ray.is_initialized():
+    ray.init(address="auto", _redis_password='5241590000000000')
 
 label_num = 6
 
@@ -46,7 +48,6 @@ def translate(query):
     }
     res = requests.post(url, data=data).json()
     return res['translateResult'][0][0]['tgt']  # 打印翻译后的结果
-@ray.remote
 # def img_formatter(res, filePath):
 #     return {
 #         'labels': [item['tag']['en'] for item in ray.get(get_top_keys.remote(res['result']['tags']))],
@@ -57,9 +58,10 @@ def translate(query):
 #         'path: ' + '\'' + filePath + '\''
 #         + '}'
 #     }
-
+@ray.remote
 def img_formatter(res, filePath):
     # 翻译英文标签为中文
+    time.sleep(3)
     labels = [item['tag']['en'] for item in ray.get(get_top_keys.remote(res['result']['tags']))]
     labels_cn = []
     for label in labels:
@@ -121,7 +123,7 @@ def text_tag(filePath: str):
     
 @ray.remote
 def pdf_tag(filePath: str):
-
+    time.sleep(3)
     pdf_text = ''
 
     with pdfplumber.open(filePath) as pdf:
@@ -148,7 +150,7 @@ def pdf_tag(filePath: str):
 #     return ray.get(img_formatter.remote(response.json(), image_path))
 @ray.remote
 def img_tag(image_path: str):
-
+    time.sleep(3)
     api_key = 'acc_ec9b217a28c4e19'
 
     api_secret = 'de16ce61cf5497198e70815b1104e6e7'
@@ -185,6 +187,7 @@ def wav_tag(filePath: str):
 
 @ray.remote
 def audio_tag(filePath: str):
+    time.sleep(3)
     dst = filePath + '.tmp.wav'
 
     # convert wav to mp3
