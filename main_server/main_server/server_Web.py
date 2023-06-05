@@ -3,7 +3,6 @@ import websockets
 import time
 import os
 import pytoneo
-from server_action import parse_exec
 import json,os
 # from flask import Flask, request, send_file
 
@@ -263,6 +262,12 @@ async def main_logic(websocket, path):
             # 检查文件夹是否存在，如果不存在则创建它
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
+            # 检查是否有同名文件，如果有则重命名
+            if os.path.exists(save_path):
+                renamed_save_path = f"{UPLOAD_DIR}{uuid.uuid4().hex}_{metadata['name']}"
+                print(f"文件已存在，重命名为：{renamed_save_path}")
+                await websocket.send(f"文件已重命名为：{os.path.basename(renamed_save_path)}")
+
             # 检查文件名是否正确
             if not os.path.basename(save_path) == metadata['name']:
                 raise Exception("文件名不正确")
@@ -278,6 +283,20 @@ async def main_logic(websocket, path):
                     if not data:
                         break
                     file.write(data)
+            
+            # 向客户端发送上传成功的消息
+            await websocket.send("上传成功")
+
+            # 向打标服务器发送指令
+            if tag_num == 0:
+                print("no tag server")
+
+            else:
+                #选择一个tag服务器作为打标服务器，之后可改为随机取打标服务器
+                tag_index = 0
+                # recv_text格式为：{'type': 'create', 'path1': '1.txt', 'path2': '', 'time': xxxxxxxxxxxxx}
+                recv_text = json.dumps({'type': 'create', 'path1': metadata['name'], 'path2': '', 'time': time.time()})
+                await tag_array[tag_index].send(recv_text)
 
             print(f"已成功上传文件：{metadata['name']}")
             print(f"文件类型：{metadata['type']}")
@@ -289,6 +308,18 @@ async def main_logic(websocket, path):
             print("无效的元数据格式")
         except Exception as e:
             print(f"上传文件时出现错误：{e}")
+        finally:
+            # 等待直到数据库中对应节点打标后更新完成
+            if not tag_num == 0:
+                while True:
+                    if not Neo4jServer.check_node(metadata['name']):
+                        print("数据库中已更新")
+                        websocket.send("打标成功")
+                        break
+                    else:
+                        await asyncio.sleep(1)
+            # 关闭连接
+            await websocket.close()        
     else:  
         pass
     

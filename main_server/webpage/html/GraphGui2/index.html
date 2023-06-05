@@ -169,6 +169,28 @@
                         console.error(`上传文件时出现错误：${error}`);
                         reject(error); // 解析Promise对象
                     });
+
+                    // 监听来自服务器的消息
+                    socket.addEventListener('message', (event) => {
+                        const message = event.data;
+                        if (message.startsWith('文件已重命名为：')) {
+                            const renamedFileName = message.slice(10); // 获取重命名后的文件名
+                            alert(`文件已存在，重命名为：${renamedFileName}`);
+                        }
+                    });
+                    socket.addEventListener('message', (event) => {
+                        const message = event.data;
+                        if (message === '上传成功') {
+                            alert('上传成功');
+                        }
+                    });
+                    socket.addEventListener('message', (event) => {
+                        const message = event.data;
+                        if (message === '打标成功') {
+                            alert('打标成功');
+                            location.reload(); // 刷新页面
+                        }
+                    });
                 });
             }
     
