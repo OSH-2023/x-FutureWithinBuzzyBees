@@ -153,7 +153,7 @@
                     // 当读取完成时，发送文件内容
                     reader.onload = () => {
                         socket.send(reader.result);
-                        socket.close(); // 上传完成后关闭连接
+                      //  socket.close(); // 上传完成后关闭连接
                         console.log(`已成功上传文件：${file.name}`);
                         console.log(`文件类型：${file.type}`);
                         console.log(`文件大小：${file.size} bytes`);
