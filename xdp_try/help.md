@@ -1,0 +1,3 @@
+CPU负载均衡：sudo python3 xdp_cpujunheng.py ens33
+ens33是端口名。可替换
+v1版本算法为将接到的包直接平均分给每一个CPU
