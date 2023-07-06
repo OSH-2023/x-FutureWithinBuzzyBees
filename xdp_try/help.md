@@ -1,6 +1,6 @@
 ## CPU负载均衡
 
-运行方式 sudo python3 xdp_cpujunheng.py ens33
+运行方式 sudo python3 CPU加权负载均衡.py ens33
 
 ens33是端口名。可替换为lo等等
 
