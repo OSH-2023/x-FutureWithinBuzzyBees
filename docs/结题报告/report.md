@@ -43,10 +43,56 @@
 
 ![current DisgraFS](./assets/now.png)
 
-- 摆脱客户端依赖(只需服务器部署JuiceFS)
+- 摆脱客户端依赖(但是仍然保留了客户端上传/下载的功能)
 - 修复了原有DisGraFS存在的问题
-- 优化了WebPage逻辑，实现了网页端上传/下载逻辑
+- 优化了WebPage逻辑，实现了网页端上传、下载、删除文件等一系列文件操作
 - 修复了tagserver打标API过期的问题，同时扩展了打标类型
+
+### 2.3 Display
+
+我们优化过后的页面
+
+![image-20230708170106913](./report.assets/image-20230708170106913.png)
+
+通过选取tag来索引文件
+
+![image-20230708180929039](./report.assets/image-20230708180929039.png)
+
+
+
+新增的上传、下载文件（打开文件），删除文件功能
+
+![image-20230708170210083](./report.assets/image-20230708170210083.png)
+
+下载功能展示：
+
+![image-20230708180757461](./report.assets/image-20230708180757461.png)
+
+删除功能展示：
+
+服务器通过通信确认删除成功（如果文件不存在会有删除失败的提示）
+
+![image-20230708180844757](./report.assets/image-20230708180844757.png)
+
+![image-20230708181042234](./report.assets/image-20230708181042234.png)
+
+上传功能展示：
+
+上传文件后mainserver收到文件并存储到jfs中
+
+![image-20230708182202423](./report.assets/image-20230708182202423.png)
+
+并将信息发送给tagserver，tagserver读取对应文件进行打标，打标完成后将tag发送给mainserver
+
+![image-20230708182319775](./report.assets/image-20230708182319775.png)
+
+mainserver收到tag后，更新数据库
+
+![image-20230708182340743](./report.assets/image-20230708182340743.png)
+
+刷新网页可以看到上传的文件和对应的标签
+
+![image-20230708182507376](./report.assets/image-20230708182507376.png)
 
 
 ##  3. <a name='eBPFsSolution'></a>eBPF's Solution
@@ -929,11 +975,7 @@ sudo xdp-loader status
 
 ![image-20230708155345991](./report.assets/image-20230708155345991.png)
 
-####  3.2.5. <a name='-1'></a>性能监测
-
-
-
-##  4. <a name='-1'></a>展望
+##  4.<a name='-1'></a>展望
 
 由于时间仓促，尽管项目已经取得了显著的进展，但仍然存在一些不完善之处。以下是一些项目在未来值得优化的地方
 
