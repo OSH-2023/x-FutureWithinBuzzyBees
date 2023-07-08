@@ -131,6 +131,13 @@ XDP（eXpress Data Path）提供了一个内核态、高性能、可编程 BPF �
 
 ![XDP程序运行的位置](./report.assets/1613889918890.png)
 
+以下是XDP程序在连接到网络接口后可以对其接收的数据包执行的一些操作：
+
+- -XDP_DROP – 丢弃且不处理数据包。eBPF程序可以分析流量模式并使用过滤器实时更新XDP应用程序以丢弃特定类型的数据包（例如，恶意流量）。
+- XDP_PASS – 指示应将数据包转发到正常网络堆栈以进行进一步处理。XDP程序可以在此之前修改包的内容。
+- XDP_TX – 将数据包（可能已被修改）转发到接收它的同一网络接口。
+- XDP_REDIRECT – 绕过正常的网络堆栈并通过另一个NIC将数据包重定向到网络。
+  
 ####  3.2.1. <a name='http_filter'></a>http_filter
 
 一个实例:解析HTTP数据包并提取（并打印）GET/POST请求中包含的URL。通过该实例我们可以观察eBPF是如何处理网络数据流的.
@@ -145,6 +152,15 @@ int load_byte();
 BPF_TABLE(map_type, key_type, leaf_type, table_name, num_entry)
 ```
 
+通过这个例子我们可以简单地梳理一遍这个filter的思路,
+1. 使用BPF编程加载eBPF程序。
+2. 创建原始套接字并将其绑定到指定的网络接口并将eBPF程序附加到原始套接字。
+3. 通过文件描述符创建套接字对象。
+4. 进入循环，不断从套接字中读取数据包。
+5. 解析数据包，提取IP头部和TCP头部信息。
+
+其中,该eBPF程序通过过滤和判断网络数据包的头部信息，识别其中的HTTP请求(细节涉及到网络从物理层通过以太网,IP,TCP协议的传输,而eBPF的钩子机制使其可以在传输到内核前监测并处理数据包.)。如果匹配到HTTP请求，就将其保留并传递给用户空间(PASS)，否则丢弃该数据包(DROP)。这样可以实现对网络流量中的HTTP请求的简单捕获和过滤。
+
 ####  3.2.2. <a name='CPUsbalance'></a>CPU's balance
 实现对传入数据包的动态负载均衡。通过将传入的数据包在多个CPU之间均衡分配，可以达到以下几个方面的用处：
 
@@ -153,7 +169,12 @@ BPF_TABLE(map_type, key_type, leaf_type, table_name, num_entry)
 3. 提高系统的容错性：通过将数据包分散到多个CPU上处理，即使其中一个CPU出现故障或负载过高，其他CPU仍然可以继续处理数据包，确保系统的可用性和稳定性。
 4. 灵活配置权重：使用了权重值来配置每个CPU的处理能力。通过调整不同CPU的权重值，可以根据实际需求分配不同的计算资源。较高权重的CPU将处理更多的数据包，从而充分利用其处理能力。
 
-BPF映射类型的运用
+**hook点**
+
+通过调用 `b.attach_xdp(in_if, in_fn, flags)` 将 XDP 程序附加到指定的网络接口上，即设置了 XDP 程序的 hook 点。在这个示例中，XDP 程序的 hook 点是数据包到达网络接口之后、进入内核网络协议栈之前。
+
+
+**BPF映射类型的运用**
 
 在 eBPF 程序中，不能直接使用传统的 C 语言数组或数据结构，因为 eBPF 程序是在内核中执行的，而不是在用户空间中执行。由于内核和用户空间有不同的内存访问限制和安全机制，因此需要使用特定的数据结构和操作来进行数据的处理和存储。
 
@@ -162,6 +183,40 @@ BPF映射类型的运用
 3. BPF_PERCPU_ARRAY 类型的数组 (`BPF_PERCPU_ARRAY(rxcnt, long, 1)`)： 这个数组用于记录每个 CPU 上接收到的数据包数量。因为每个 CPU 都需要记录自己接收到的数据包数量，所以使用 BPF_PERCPU_ARRAY 类型，它提供了在 eBPF 程序中进行多个 CPU 计数的功能。每个数组元素都会分配给一个 CPU，因此可以并发地更新计数器，而不会出现竞争条件。
 
 通过选择不同类型的数据结构，可以使 eBPF 程序更加灵活地处理数据，并根据需要进行数据的映射、存储和计数。这些数据结构提供了 eBPF 程序所需的功能和性能，以满足特定的需求和使用场景。
+![bpf-kernel-hooks](./assets/bpf_map.png)
+一个具体的例子如上图：
+
+在给定的程序中，`weights` BPF Map 用于存储每个 CPU 的权重值。用户态程序可以通过写入 `weights` Map 来设置每个 CPU 的权重。
+
+具体的步骤如下：
+
+1. 在程序开始时，通过 `weights = b.get_table("weights")` 获取 `weights` BPF Map 对象。
+2. 使用 `weights[cpu_index] = ct.c_uint32(weight)` 将特定 CPU 的权重值写入 `weights` Map。这里的 `cpu_index` 表示 CPU 的索引，而 `weight` 表示相应 CPU 的权重值。
+
+例如，通过 `weights[0] = ct.c_uint32(1)` 将 CPU 0 的权重设置为 1，通过 `weights[1] = ct.c_uint32(2)` 将 CPU 1 的权重设置为 2。
+
+内核态的 eBPF 程序可以通过从 `weights` Map 中读取相应 CPU 的权重值来执行相应的负载均衡逻辑。在给定的程序中，当执行重定向操作时，通过从 `weights` Map 中读取当前 CPU 的权重值，并根据权重进行负载均衡选择下一个 CPU。
+
+例如，当执行重定向操作时，eBPF 程序可以使用类似以下的代码来读取当前 CPU 的权重值：
+
+```
+arduinoCopy codeint cpu_index = *cpu;
+uint32_t *weight = weights.lookup(&cpu_index);
+```
+
+在这个例子中，`cpu_index` 是当前 CPU 的索引，`weights.lookup(&cpu_index)` 用于从 `weights` Map 中获取相应 CPU 的权重值。
+
+这样就通过weights这个bpf map实现了内核态与用户态的沟通，用户态设置cpu权重，内核态根据用户态设置的权重进行CPU负载均衡
+
+**CPU负载均衡算法**
+
+1. 轮询（Round Robin）：将任务按照顺序依次分配给每个 CPU 核心。每个任务按照固定顺序依次分配给不同的 CPU 核心，实现均衡的任务分配。
+2. 最少连接（Least Connection）：将任务分配给当前连接数最少的 CPU 核心。通过监控每个 CPU 核心的当前连接数，将新任务分配给连接数最少的核心，以实现负载均衡。
+3. 加权轮询（Weighted Round Robin）：为每个 CPU 核心分配一个权重值，根据权重值按顺序分配任务。权重值高的 CPU 核心将获得更多的任务。
+4. 加权最少连接（Weighted Least Connection）：为每个 CPU 核心分配一个权重值，将任务分配给当前连接数最少且权重值最高的核心。这样可以确保连接数较少且权重较高的 CPU 核心获得更多的任务。
+5. 响应时间加权（Response Time Weighted）：根据每个 CPU 核心的平均响应时间，为每个核心分配一个权重值。响应时间较短的核心将获得更多的任务，以实现负载均衡和性能优化。
+
+这些算法可以根据实际需求和系统特点进行选择和组合。每种算法都有其优势和适用场景，选择适合的算法可以提高 CPU 负载均衡的效果和性能。但是上述算法都有一定局限性，我们可以在上面的基础上，进行动态调整。如：动态调整CPU的权重，达到更好的负载均衡效果。
 
 利用grafana进行性能检测：
 ![bpf-kernel-hooks](./assets/sure_1.png)
