@@ -33,6 +33,10 @@
 
 - 客户端依赖大(需要客户端安装JuiceFS)
 - 无法真正上传/下载文件
+- 打标文件类型过少
+- 安全性较差，缺少安全性检验
+- 速度较慢，文件信息需要在mainserver与tagserver之间反复传递
+- 客户端存在问题
 
 
 ###  2.2. <a name='OurVersion'></a>Our Version
@@ -40,7 +44,9 @@
 ![current DisgraFS](./assets/now.png)
 
 - 摆脱客户端依赖(只需服务器部署JuiceFS)
-- 实现真正上传/下载文件
+- 修复了原有DisGraFS存在的问题
+- 优化了WebPage逻辑，实现了网页端上传/下载逻辑
+- 修复了tagserver打标API过期的问题，同时扩展了打标类型
 
 
 ##  3. <a name='eBPFsSolution'></a>eBPF's Solution
