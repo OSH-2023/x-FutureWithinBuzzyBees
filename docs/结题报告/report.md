@@ -1026,6 +1026,29 @@ sudo xdp-loader status
 
 ##  4.<a name='-1'></a>展望
 
+- 项目进展甘特图
+  
+```mermaid
+gantt
+    dateFormat  YYYY-MM-DD
+    title 项目进度甘特图
+
+    section 调研确定选题
+    调研确定选题          :done,    task,    2023-03-18, 2023-05-04
+
+    section 部署并优化DisGraFS
+    部署并优化DisGraFS     :done,    task,    2023-05-11, 2023-06-14
+
+    section 同步进行eBPF与XDP学习实践
+    同步进行eBPF与XDP学习实践 :done,    task,    2023-05-11, 2023-07-04
+
+    section 结合XDP与DisGraFS对网络IO优化
+    结合XDP与DisGraFS对网络IO优化 :done,    task,    2023-07-05, 2023-07-08
+
+    section Pre
+    Presentation                :         task,    2023-07-09, 2023-07-09
+```
+
 由于时间仓促，尽管项目已经取得了显著的进展，但仍然存在一些不完善之处。以下是一些项目在未来值得优化的地方
 
 1. 改进DisgraFS的稳定性：在当前的实现中，虽然已经成功摆脱了客户端的依赖，并通过多个XDP程序对DisgraFS的mainserver中央服务器进行了优化，但还需要进一步提高系统的稳定性。这可能包括检测和修复潜在的错误、处理边缘情况，并确保系统在各种负载条件下都能正常运行。
