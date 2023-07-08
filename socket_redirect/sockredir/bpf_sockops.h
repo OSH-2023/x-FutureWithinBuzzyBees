@@ -44,9 +44,8 @@
 #endif
 
 
-/* ebpf helper function
- * The generated function is used for parameter verification
- * by the eBPF verifier
+/* 主要使用到的ebpf helper 函数
+ * The generated function is used for parameter verification by the eBPF verifier
  */
 static int BPF_FUNC(msg_redirect_hash, struct sk_msg_md *md,
 			void *map, void *key, uint64_t flag);
@@ -56,8 +55,6 @@ static void BPF_FUNC(trace_printk, const char *fmt, int fmt_size, ...);
 
 /*
  * Map definition
- * Why should we reuse the map definition bpf_elf_map
- * from iproute2/bpf_elf.h?
  */
 struct bpf_map_def {
 	uint32_t type;
@@ -68,24 +65,24 @@ struct bpf_map_def {
 };
 
 struct sock_key {
-	uint32_t sip4;
-	uint32_t dip4;
-	uint8_t  family;
+	uint32_t sip4;      //源ip
+	uint32_t dip4;      //目标ip
+	uint8_t  family;    //协议族
 	uint8_t  pad1;
 	uint16_t pad2;
 	// this padding required for 64bit alignment
 	// else ebpf kernel verifier rejects loading
 	// of the program
 	uint32_t pad3;
-	uint32_t sport;
-	uint32_t dport;
+	uint32_t sport;   //源端口
+	uint32_t dport;    //目标端口
 } __attribute__((packed));
 
 
-struct bpf_map_def __section("maps") sock_ops_map = {
-	.type           = BPF_MAP_TYPE_SOCKHASH,
-	.key_size       = sizeof(struct sock_key),
-	.value_size     = sizeof(int),
+struct bpf_map_def __section("maps") sock_ops_map = {    //映射区定义
+	.type           = BPF_MAP_TYPE_SOCKHASH,             //哈希映射类型
+	.key_size       = sizeof(struct sock_key),   
+	.value_size     = sizeof(int),              
 	.max_entries    = 65535,
 	.map_flags      = 0,
 };
