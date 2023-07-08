@@ -68,7 +68,7 @@ libbpf: elf: skipping unrecognized data section(8) .rodata.str1.1
         key 24B  value 4B  max_entries 65535  memlock 2097152B
 ```
 
-### 验证应用程序是否绕过TCPIP堆栈
+### 验证应用程序是否绕过TCP/IP堆栈
 
 #### Turn on tracing logs (if not enabled by default)
 ```bash

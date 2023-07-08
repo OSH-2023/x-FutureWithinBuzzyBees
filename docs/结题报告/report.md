@@ -75,12 +75,72 @@ Linux内核支持不同类型的eBPF程序，每个程序都可以连接到内�
 
 ####  3.2.1. <a name='http_filter'></a>http_filter
 
+一个实例:解析HTTP数据包并提取（并打印）GET/POST请求中包含的URL。通过该实例我们可以观察eBPF是如何处理网络数据流的.
+
+原理是基于bcc工具链中的http_filter对http请求进行拦截并解析http Header(相当于创建一个BPF虚拟机使用套接字接受http请求),注意到linux内核提供了`BPF.SOCKET_FILTER`接口，接受到packet后计算`payload_offset = ETH_HLEN + ip_header_length + tcp_header_length;`,然后通过`load_byte()`,按字节读入header.随后对header进行解析即可
+
+```c
+int http_filter(struct __sk_buff *skb) ;
+//eBPF读入packet方法
+int load_byte();
+//BPF_map<Key, Leaf>
+BPF_TABLE(map_type, key_type, leaf_type, table_name, num_entry)
+```
+
 ####  3.2.2. <a name='CPUsbalance'></a>CPU's balance
 
 ####  3.2.3. <a name='socket_redirect'></a>socket_redirect
+
 在sockect_redirect中实现了当应用程序位于同一主机上时，使应用程序能够使用eBPF透明地绕过TCP/IP堆栈。
 
-使用eBPF进行网络加速,研究套接字数据重定向的机制
+使用eBPF进行网络加速,研究套接字数据重定向的机制.
+
+1. 使用LLVM Clang前端编译sockops BPF代码，该代码更新sockhash映射
+2. 使用bpftool将上面编译的代码附加到cgroup，以便为系统中的所有套接字操作（如建立连接等）调用它。
+3. 提取由上述程序创建的sockhash映射的id，并将该映射固定到虚拟文件系统，使得第二eBPF程序
+4. 可以访问该map.编译tcpip_bypass代码，该代码将绕过tcpip堆栈
+5. 执行套接字数据重定向。使用bpftool将上述eBPF代码附加到sockhash映射
+
+- BPF钩子挂载:
+![BPF_hooks](assets/BPF_hooks.png)
+
+- BPF共享maps:
+
+```bash
+#sudo tree /sys/fs/bpf/
+/sys/fs/bpf/
+├── bpf_sockops
+├── bpf_tcpip_bypass
+└── sock_ops_map
+# sudo bpftool map list
+4: sockhash  name sock_ops_map  flags 0x0
+        key 24B  value 4B  max_entries 65535  memlock 2097152B
+```
+
+- 验证应用程序是否绕过TCP/IP堆栈：
+
+可以将内核实时流跟踪文件trace_pipe放入shell中，以监视通过eBPF的TCP通信的跟踪
+```bash
+# sudo cat /sys/kernel/debug/tracing/trace_pipe
+  <idle>-0       [000] d.s.1 89797.577008: bpf_trace_printk: <<< ipv4 op = 4, port 38902 --> 80
+  <idle>-0       [000] d.s.1 89863.993725: bpf_trace_printk: <<< ipv4 op = 4, port 58380 --> 443
+...
+```
+我们可以使用SOCAT派生的TCP侦听器来模拟echo服务器，并使用netcat来发送TCP连接请求。
+
+```bash
+sudo socat TCP4-LISTEN:1000,fork exec:cat
+nc localhost 1000 # this should produce the trace in the kernel file trace_pipe
+```
+可以监测结果
+```shell
+# sudo cat /sys/kernel/debug/tracing/trace_pipe
+        <idle>-0       [000] d.s.1 91597.541404: bpf_trace_printk: <<< ipv4 op = 4, port 40762 --> 80
+        node-126065  [000] d.s.1 91598.729170: bpf_trace_printk: <<< ipv4 op = 4, port 38678 --> 443
+        nc-132366  [000] d...1 91639.938416: bpf_trace_printk: <<< ipv4 op = 4, port 38838 --> 1000
+        nc-132366  [000] d.s11 91639.938514: bpf_trace_printk: <<< ipv4 op = 5, port 1000 --> 38838
+```
+
 ####  3.2.4. <a name='AFXDP'></a>AFXDP
 
 ####  3.2.5. <a name='-1'></a>性能监测
