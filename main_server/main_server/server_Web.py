@@ -285,12 +285,15 @@ async def main_logic(websocket, path):
             print(4)
             # 创建文件并写入内容
             with open(save_path, 'wb') as file:
+                print(1)
                 while True:
                     # 接收文件内容
+                    print(0)
                     data = await websocket.recv()
-                    if not data:
-                        break
+                    #if not data:
+                    #    break
                     file.write(data)
+                    break
             
             print(5)
             # 向客户端发送上传成功的消息
@@ -325,7 +328,7 @@ async def main_logic(websocket, path):
                 while True:
                     if not Neo4jServer.find_file(metadata['name']):
                         print("数据库中已更新")
-                        await websocket.send("打标成功")
+                        websocket.send("打标成功")
                         break
                     else:
                         await asyncio.sleep(1)
