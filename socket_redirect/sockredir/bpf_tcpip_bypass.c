@@ -16,12 +16,12 @@ void sk_msg_extract4_key(struct sk_msg_md *msg,
 	key->sport = FORCE_READ(msg->remote_port) >> 16;
 }
 
-__section("sk_msg")
+__section("sk_msg")          //hook点：拦截socket的所有sendmsg 系统调用
 int bpf_tcpip_bypass(struct sk_msg_md *msg)
 {
     struct  sock_key key = {};
-    sk_msg_extract4_key(msg, &key);
-    msg_redirect_hash(msg, &sock_ops_map, &key, BPF_F_INGRESS);
+    sk_msg_extract4_key(msg, &key);    //从msg中提取key
+    msg_redirect_hash(msg, &sock_ops_map, &key, BPF_F_INGRESS);  //在映射表中根据 key查询socket的对端，然后绕过 TCP/IP 协议栈，直接将数据重定向到对端socket的某个 queue
     return SK_PASS;
 }
 

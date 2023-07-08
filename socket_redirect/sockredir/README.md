@@ -49,9 +49,10 @@ libbpf: elf: skipping unrecognized data section(8) .rodata.str1.1
 103: sk_msg  name bpf_tcpip_bypas  tag 550f6d3cfcae2157  gpl
 	loaded_at 2020-04-08T15:54:36-0700  uid 0
 	xlated 224B  jited 151B  memlock 4096B  map_ids 45
+#sudo bpftool map show id 45 -f
 ```
 
-应该能够查看同样固定在文件系统上的SOCKHASH map：
+应该能够查看同样固定在文件系统上的SOCKHASH map，SOCKHASH map 在 /sys/fs/bpf/ 文件系统中提供了对该映射的访问权限，用户可以通过读写相关的文件描述符来插入、删除、查询和更新映射中的键值对，从而控制和管理与 SOCKHASH map 相关的套接字映射。
 
 ```bash
 #sudo tree /sys/fs/bpf/
@@ -101,6 +102,6 @@ nc localhost 1000 # this should produce the trace in the kernel file trace_pipe
 
  [unload.sh](./unload.sh) 脚本将eBPF程序从挂钩中分离出来，并从内核中卸载它们。
 
-## Building
+## Test
 
-可以在任何支持eBPF的Linux内核上进行构建。可能需要你安装bpt-tools等工具
+利用linux自带的网络性能分析工具netperf来进行系统的性能分析，在未使用的端口运行netserver -p ++++ 来创建一个本地TCP服务器，然后运行相关nperf_**.sh脚本文件，即可分析ebpf程序绕过本机tcp/ip栈与未绕过时不同的网络性能，这其中包括在不同请求响应大小下的网络延迟量、吞吐量及事务处理速率等。
