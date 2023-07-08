@@ -105,7 +105,12 @@ BPF映射类型的运用
 
 通过选择不同类型的数据结构，可以使 eBPF 程序更加灵活地处理数据，并根据需要进行数据的映射、存储和计数。这些数据结构提供了 eBPF 程序所需的功能和性能，以满足特定的需求和使用场景。
 
-性能检测：to be continued
+利用grafana进行性能检测：
+![bpf-kernel-hooks](./assets/sure_1.png)
+![bpf-kernel-hooks](./assets/sure_2.png)
+![bpf-kernel-hooks](./assets/sure_4.png)
+下面进行性能的对比
+
 ####  3.2.3. <a name='socket_redirect'></a>socket_redirect
 
 在sockect_redirect中实现了当应用程序位于同一主机上时，使应用程序能够使用eBPF透明地绕过TCP/IP堆栈。
