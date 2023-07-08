@@ -110,6 +110,28 @@ BPF映射类型的运用
 ![bpf-kernel-hooks](./assets/sure_2.png)
 ![bpf-kernel-hooks](./assets/sure_4.png)
 下面进行性能的对比
+|                       | 优化前   | 优化后   |
+| --------------------- | -------- | -------- |
+| 单个CPU使用率的峰值   | 90.57%   | 52.86%   |
+| 网络带宽吞吐率        | 2.46kb/s | 4.46kb/s |
+| 磁盘写入速率          | 4        | 10       |
+| 磁盘读取速率          | 8        | 27       |
+| 每1秒内IO操作耗时占比 | 0.382%   | 0.565%   |
+| Tcp_inSegs            | 3.68     | 10.2     |
+| Tcp_outSegs           | 3.69     | 10.2     |
+| socket_used           | 1055     | 1055     |
+
+
+
+1. sockets_used: 正在使用的套接字数量，包括TCP和UDP。
+
+2. Tcp_InSegs: 接收的TCP报文段数量。
+
+3. Tcp_OutSegs: 发送的TCP报文段数量。
+
+   这些指标表示接收和发送的TCP报文段数量，可以用于监测网络的数据传输情况和活跃度。较高的数值可能表示较大的数据传输量，但同时也可能暗示网络拥塞或重传情况。
+
+   
 
 ####  3.2.3. <a name='socket_redirect'></a>socket_redirect
 
