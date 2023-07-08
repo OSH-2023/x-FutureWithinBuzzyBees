@@ -36,7 +36,7 @@
 - 打标文件类型过少
 - 安全性较差，缺少安全性检验
 - 速度较慢，文件信息需要在mainserver与tagserver之间反复传递
-- 客户端存在问题
+- 客户端存在代码过期、环境依赖严重等问题
 
 
 ###  2.2. <a name='OurVersion'></a>Our Version
@@ -44,11 +44,11 @@
 ![current DisgraFS](./assets/now.png)
 
 - 摆脱客户端依赖(但是仍然保留了客户端上传/下载的功能)
-- 修复了原有DisGraFS存在的问题
+- 修复了原有DisGraFS存在的问题（代码无法运行、安全性检验等）
 - 优化了WebPage逻辑，实现了网页端上传、下载、删除文件等一系列文件操作
 - 修复了tagserver打标API过期的问题，同时扩展了打标类型
 
-### 2.3 Display
+### 2.3. <a name='Display'></a>Display
 
 我们优化过后的页面
 
@@ -361,8 +361,6 @@ Van Jacobson 在报告中谈到的 [transport signature](http://www.lemis.com/gr
 xsk_fd = socket(AF_XDP, SOCK_RAW, 0);
 ```
 
-这一步没什么好展开的。
-
 ###### 1.2 为UMEM申请内存
 
 上文提到UMEM是一块包含固定大小chunk的内存，我们可以通过malloc/mmap/hugepages申请。下文大部分代码出自kernel samples。
@@ -439,10 +437,6 @@ FILL RING 和 COMPLETION RING是UMEM必须，RX和TX则是 AF_XDP socket二选�
 ```
 
 上述操作相当于创建了 FILL RING 和 和 COMPLETION RING，创建ring的过程主要是初始化 producer 和 consumer 的下标，以及创建ring数组。
-
-**问题来了：**
-
-上文提到，用户态程序是 FILL RING 的生产者和 CONPLETION RING 的消费者，上面2个 ring 的创建是在内核中创建了 ring 并初始化了其相关成员。那么用户态程序如何操作这两个位于内核中的 ring 呢？所以接下来我们需要将整个 ring 映射到用户态空间。
 
 ###### 1.5 将FILL RING 映射到用户态
 
