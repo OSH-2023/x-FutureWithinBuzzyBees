@@ -11,7 +11,7 @@ A simple bash script [load.sh](./load.sh) is included that performs the followin
 
 1. 使用LLVM Clang前端编译sockops BPF代码，该代码更新sockhash映射
 2. 使用bpftool将上面编译的代码附加到cgroup，以便为系统中的所有套接字操作（如建立连接等）调用它。
-3. 提取由上述程序创建的sockhash映射的id，并将该映射固定到虚拟文件系统，使得第二eBPF程序
+3. 提取由上述程序创建的sockhash映射的id，并将该映射固定到虚拟文件系统，使得第二eBPF程序可以访问该映射。
 4. 可以访问该map.编译tcpip_bypass代码，该代码将绕过tcpip堆栈
 5. 执行套接字数据重定向。使用bpftool将上述eBPF代码附加到sockhash映射
 
