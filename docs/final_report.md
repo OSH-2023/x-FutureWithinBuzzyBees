@@ -16,14 +16,12 @@
   - 2.2. [Our Version](#OurVersion)
 - 3. [eBPF's Solution](#eBPFsSolution)
   - 3.1. [Theory](#Theory)
-    - 3.1.1. [网络传输](#)
-    - 3.1.2. [eBPF 基本思路](#eBPF)
+    - 3.1.1. [eBPF 基本思路](#eBPF)
   - 3.2. [XDP](#XDP)
     - 3.2.1. [http_filter](#http_filter)
     - 3.2.2. [CPU's balance](#CPUsbalance)
     - 3.2.3. [socket_redirect](#socket_redirect)
     - 3.2.4. [AFXDP](#AFXDP)
-    - 3.2.5. [性能监测](#-1)
 - 4. [展望](#-1)
 
 ## 2. <a name='DisgraFS'></a>DisgraFS
@@ -99,11 +97,7 @@ mainserver 收到 tag 后，更新数据库
 - target "accelerating Cloud Native applications"
   随着实时应用程序对实时性越来越高，人们不断渴求于性能增强，以加快服务速度。此处使用 eBPF 加速后端各种微服务之间的通信。
 
-#### 3.1.1. <a name=''></a>网络传输
-
-
-
-#### 3.1.2. <a name='eBPF'></a>eBPF 基本思路
+#### 3.1.1. <a name='eBPF'></a>eBPF 基本思路
 
 > "BPF 允许将用户定义的过滤器转换为指令，这些指令在内核内的具有小寄存器集的简单 VM 内运行，并指定拒绝或接受网络数据包的哪个子集。在指令集中构建了安全功能（例如，没有无限循环来保证有界完成等）.
 >
