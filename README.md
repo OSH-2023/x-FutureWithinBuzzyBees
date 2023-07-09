@@ -118,7 +118,7 @@
 
 ## 进展甘特图
 
-![](docs\结题报告\assets\gantt.png)
+![](./docs/结题报告/assets/gantt.png)
 
 ## 总结和展望
 
