@@ -1049,26 +1049,7 @@ sudo xdp-loader status
 
 - 项目进展甘特图
 
-```mermaid
-gantt
-    dateFormat  YYYY-MM-DD
-    title 项目进度甘特图
-
-    section 调研确定选题
-    调研确定选题          :done,    task,    2023-03-18, 2023-05-04
-
-    section 部署并优化DisGraFS
-    部署并优化DisGraFS     :done,    task,    2023-05-11, 2023-06-14
-
-    section 同步进行eBPF与XDP学习实践
-    同步进行eBPF与XDP学习实践 :done,    task,    2023-05-11, 2023-07-04
-
-    section 结合XDP与DisGraFS对网络IO优化
-    结合XDP与DisGraFS对网络IO优化 :done,    task,    2023-07-05, 2023-07-08
-
-    section Pre
-    Presentation                :         task,    2023-07-09, 2023-07-09
-```
+![gantt](./assets/gantt.png)
 
 由于时间仓促，尽管项目已经取得了显著的进展，但仍然存在一些不完善之处。以下是一些项目在未来值得优化的地方
 
