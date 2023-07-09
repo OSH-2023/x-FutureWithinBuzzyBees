@@ -1129,3 +1129,7 @@ gantt
 [25] Kernel Dataplane XDP简介. (2020). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/321387418#
 
 [26] 使用ebpf优化FUSE的性能. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/518531067
+
+[27] 利用 ebpf sockmap/redirection 提升 socket 性能 http://arthurchiao.art/blog/socket-acceleration-with-ebpf-zh/
+
+[28] github.com/cyralinc/os-eBPF https://github.com/cyralinc/os-eBPF/blob/develop/sockredir/
