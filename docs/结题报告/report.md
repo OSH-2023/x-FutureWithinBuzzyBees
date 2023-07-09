@@ -1070,3 +1070,56 @@ gantt
 
 
 
+## 参考文献
+
+[1] DisGraFS. (2021). OSH-2021/x-DisGraFS. GitHub. https://github.com/OSH-2021/x-DisGraFS
+
+[2] SimpleClearFileIO. (n.d.). GitHub. https://github.com/spongecaptain/SimpleClearFileIO
+
+[3] xdp-project. (n.d.). xdp-tutorial. GitHub. https://github.com/xdp-project/xdp-tutorial/
+
+[4] Docker. (n.d.). How to build, share, and run applications. Docker Documentation. Retrieved April 23, 2023, from https://docs.docker.com/
+
+[5] Torvalds, L. (2019). bpf.h. GitHub. Retrieved April 23, 2023, from https://github.com/torvalds/linux/blob/v5.0/include/uapi/linux/bpf.h
+
+[6] Belay, A., Prekas, G., Klimovic, A., Grossman, S., & Bugnion, E. (2017). BPF for storage: An exokernel-inspired approach. In Proceedings of the 26th Symposium on Operating Systems Principles (pp. 54-70). ACM. https://doi.org/10.1145/3132747.3132761
+
+[7] Kwon, S., Lee, J., & Lee, D. (2019). Extension framework for file systems in user space. In Proceedings of the 2019 ACM SIGMETRICS / International Conference on Measurement and Modeling of Computer Systems (pp. 1-14). ACM. https://doi.org/10.1145/3302424.3303976
+
+[8] The Linux Kernel documentation. (n.d.). BPF_MAP_TYPE_DEVMAP and BPF_MAP_TYPE_DEVMAP_HASH. Retrieved April 23, 2023, from https://docs.kernel.org/bpf/map_devmap.html
+
+[9] Electrode: Accelerating Distributed Protocols with eBPF. (2023). In USENIX Symposium on Networked Systems Design and Implementation (NSDI '23). USENIX Association. https://www.usenix.org/conference/nsdi23/presentation/zhou
+
+[10] Faster Software Packet Processing on FPGA NICs with eBPF Program Warping. (2022). In USENIX Annual Technical Conference (ATC '22). USENIX Association. https://www.usenix.org/conference/atc22
+
+[11] 深入浅出 eBPF. (n.d.). 专注于 Linux 内核技术 eBPF (Linux/Kernel/XDP/BCC/BPFTrace/Cilium). Retrieved April 23, 2023, from https://www.ebpf.top/https://www.ebpf.top/)
+
+[12] 详解块存储、文件存储、对象存储区别. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/280128756
+
+[13] 分布式文件系统对比与选型参考. (2020). Retrieved April 23, 2023, from https://blog.csdn.net/yym373872996/article/details/105650908
+
+[14] 浅析三款大规模分布式文件系统架构设计. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/620985766
+
+[15] 分布式文件系统设计，该从哪些方面考虑？. (2021). Retrieved April 23, 2023, from https://cloud.tencent.com/developer/article/1645680
+
+[16] 详细讲解Linux内核IO技术栈原理. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/484945013
+
+[17] 深入剖析Linux IO原理和几种零拷贝机制的实现. (2020). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/83398714
+
+[18] DMA零拷贝技术. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/377237946
+
+[19] 深入理解Linux 的Page Cache. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/436313908
+
+[20] Linux操作系统原理—内核网络协议栈. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/379915285
+
+[21] Linux内核网络（一）——初探内核网络. (2020). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/363718587#
+
+[22] DPDK——数据平面开发技术. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/551653482
+
+[23] DPDK解析. (2020). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/363622877
+
+[24] 一文看懂eBPF｜eBPF实现原理. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/484788508
+
+[25] Kernel Dataplane XDP简介. (2020). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/321387418#
+
+[26] 使用ebpf优化FUSE的性能. (2021). Retrieved April 23, 2023, from https://zhuanlan.zhihu.com/p/518531067
