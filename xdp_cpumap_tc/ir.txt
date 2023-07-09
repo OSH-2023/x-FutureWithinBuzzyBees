@@ -1,0 +1,8 @@
+sudo ./xdp_pass --dev veth42bf63f
+sudo ./xdp_iphash_to_cpu --dev veth42bf63f --wan
+sudo tc qdisc add dev veth42bf63f clsact
+
+clang -O2 -target bpf -c tc_queue_mapping_kern.c -o tc_queue_mapping_kern.o
+sudo tc filter add dev veth42bf63f egress bpf da obj tc_queue_mapping_kern.o sec tc_qmap2cpu
+
+sudo tc filter list dev veth42bf63f egress
