@@ -1,64 +1,62 @@
 <!-- vscode-markdown-toc -->
 
 # Final report
+
 <img src="https://s1.ax1x.com/2023/02/04/pSyllvj.jpg" alt="logo.jpg" width="100" height="100" align="right"/>
 
-- **基于eBPF与DisGraFS的网络IO优化**
-- 
+- **基于 eBPF 与 DisGraFS 的网络 IO 优化**
+-
 - **FutureWithinBuzzyBees!**
 
-##  1. <a name='Contents'></a>Contents
-* 1. [Contents](#Contents)
-* 2. [DisgraFS](#DisgraFS)
-	* 2.1. [Previous Version](#PreviousVersion)
-	* 2.2. [Our Version](#OurVersion)
-* 3. [eBPF's Solution](#eBPFsSolution)
-	* 3.1. [Theory](#Theory)
-		* 3.1.1. [网络传输](#)
-		* 3.1.2. [eBPF基本思路](#eBPF)
-	* 3.2. [XDP](#XDP)
-		* 3.2.1. [http_filter](#http_filter)
-		* 3.2.2. [CPU's balance](#CPUsbalance)
-		* 3.2.3. [socket_redirect](#socket_redirect)
-		* 3.2.4. [AFXDP](#AFXDP)
-		* 3.2.5. [性能监测](#-1)
-* 4. [展望](#-1)
+## 1. <a name='Contents'></a>Contents
 
+- 1. [Contents](#Contents)
+- 2. [DisgraFS](#DisgraFS)
+  - 2.1. [Previous Version](#PreviousVersion)
+  - 2.2. [Our Version](#OurVersion)
+- 3. [eBPF's Solution](#eBPFsSolution)
+  - 3.1. [Theory](#Theory)
+    - 3.1.1. [网络传输](#)
+    - 3.1.2. [eBPF 基本思路](#eBPF)
+  - 3.2. [XDP](#XDP)
+    - 3.2.1. [http_filter](#http_filter)
+    - 3.2.2. [CPU's balance](#CPUsbalance)
+    - 3.2.3. [socket_redirect](#socket_redirect)
+    - 3.2.4. [AFXDP](#AFXDP)
+    - 3.2.5. [性能监测](#-1)
+- 4. [展望](#-1)
 
-##  2. <a name='DisgraFS'></a>DisgraFS
+## 2. <a name='DisgraFS'></a>DisgraFS
 
-###  2.1. <a name='PreviousVersion'></a>Previous Version
+### 2.1. <a name='PreviousVersion'></a>Previous Version
 
 ![previous DisgraFS](./assets/past.png)
 
-- 客户端依赖大(需要客户端安装JuiceFS)
+- 客户端依赖大(需要客户端安装 JuiceFS)
 - 无法真正上传/下载文件
 - 打标文件类型过少
 - 安全性较差，缺少安全性检验
-- 速度较慢，文件信息需要在mainserver与tagserver之间反复传递
-- 客户端存在问题
+- 速度较慢，文件信息需要在 mainserver 与 tagserver 之间反复传递
+- 客户端存在代码过期、环境依赖严重等问题
 
-
-###  2.2. <a name='OurVersion'></a>Our Version
+### 2.2. <a name='OurVersion'></a>Our Version
 
 ![current DisgraFS](./assets/now.png)
 
 - 摆脱客户端依赖(但是仍然保留了客户端上传/下载的功能)
-- 修复了原有DisGraFS存在的问题
-- 优化了WebPage逻辑，实现了网页端上传、下载、删除文件等一系列文件操作
-- 修复了tagserver打标API过期的问题，同时扩展了打标类型
+- 修复了原有 DisGraFS 存在的问题（代码无法运行、安全性检验等）
+- 优化了 WebPage 逻辑，实现了网页端上传、下载、删除文件等一系列文件操作
+- 修复了 tagserver 打标 API 过期的问题，同时扩展了打标类型
 
-### 2.3 Display
+### 2.3. <a name='Display'></a>Display
 
 我们优化过后的页面
 
 ![image-20230708170106913](./report.assets/image-20230708170106913.png)
 
-通过选取tag来索引文件
+通过选取 tag 来索引文件
 
 ![image-20230708180929039](./report.assets/image-20230708180929039.png)
-
-
 
 新增的上传、下载文件（打开文件），删除文件功能
 
@@ -78,15 +76,15 @@
 
 上传功能展示：
 
-上传文件后mainserver收到文件并存储到jfs中
+上传文件后 mainserver 收到文件并存储到 jfs 中
 
 ![image-20230708182202423](./report.assets/image-20230708182202423.png)
 
-并将信息发送给tagserver，tagserver读取对应文件进行打标，打标完成后将tag发送给mainserver
+并将信息发送给 tagserver，tagserver 读取对应文件进行打标，打标完成后将 tag 发送给 mainserver
 
 ![image-20230708182319775](./report.assets/image-20230708182319775.png)
 
-mainserver收到tag后，更新数据库
+mainserver 收到 tag 后，更新数据库
 
 ![image-20230708182340743](./report.assets/image-20230708182340743.png)
 
@@ -94,55 +92,49 @@ mainserver收到tag后，更新数据库
 
 ![image-20230708182507376](./report.assets/image-20230708182507376.png)
 
+## 3. <a name='eBPFsSolution'></a>eBPF's Solution
 
-##  3. <a name='eBPFsSolution'></a>eBPF's Solution
+### 3.1. <a name='Theory'></a>Theory
 
-###  3.1. <a name='Theory'></a>Theory
 - target "accelerating Cloud Native applications"
-随着实时应用程序对实时性越来越高，人们不断渴求于性能增强，以加快服务速度。此处使用eBPF加速后端各种微服务之间的通信。
+  随着实时应用程序对实时性越来越高，人们不断渴求于性能增强，以加快服务速度。此处使用 eBPF 加速后端各种微服务之间的通信。
 
-####  3.1.1. <a name=''></a>网络传输
+#### 3.1.1. <a name=''></a>网络传输
 
+#### 3.1.2. <a name='eBPF'></a>eBPF 基本思路
 
+> "BPF 允许将用户定义的过滤器转换为指令，这些指令在内核内的具有小寄存器集的简单 VM 内运行，并指定拒绝或接受网络数据包的哪个子集。在指令集中构建了安全功能（例如，没有无限循环来保证有界完成等）.
+>
+> 上述 BPF，后来被称为“经典”BPF，被扩展为具有增强的指令集、新功能，包括支持在内核中挂接多个事件、除了数据包过滤之外的操作、提高性能的实时汇编程序，以及用于在内核中注入代码的字节码优化器和验证器（请参阅此处的详细信息）。其结果是一个通用的数据包过滤器框架，可用于在 Linux 内核中注入 BPF 程序，以在运行时扩展其功能。这种增强形式被称为扩展 BPF 或 eBPF"
 
-
-####  3.1.2. <a name='eBPF'></a>eBPF基本思路
-
-> "BPF允许将用户定义的过滤器转换为指令，这些指令在内核内的具有小寄存器集的简单VM内运行，并指定拒绝或接受网络数据包的哪个子集。在指令集中构建了安全功能（例如，没有无限循环来保证有界完成等）.
-> 
-> 上述BPF，后来被称为“经典”BPF，被扩展为具有增强的指令集、新功能，包括支持在内核中挂接多个事件、除了数据包过滤之外的操作、提高性能的实时汇编程序，以及用于在内核中注入代码的字节码优化器和验证器（请参阅此处的详细信息）。其结果是一个通用的数据包过滤器框架，可用于在Linux内核中注入BPF程序，以在运行时扩展其功能。这种增强形式被称为扩展BPF或eBPF"
-
-eBPF正被广泛用于使用内核跟踪（kprobes/tracing）的可观察性，因为内核中的代码运行速度极快（不涉及上下文切换），而且由于它是基于事件的，因此更准确。此外，eBPF正在一些环境中使用，在这些环境中，基于IP地址的传统安全监控和访问控制是不够的（例如，在基于容器的环境中，如Kubernetes）。在图1中，可以看到Linux内核中的各种挂钩，其中eBPF程序可以挂钩执行。
+eBPF 正被广泛用于使用内核跟踪（kprobes/tracing）的可观察性，因为内核中的代码运行速度极快（不涉及上下文切换），而且由于它是基于事件的，因此更准确。此外，eBPF 正在一些环境中使用，在这些环境中，基于 IP 地址的传统安全监控和访问控制是不够的（例如，在基于容器的环境中，如 Kubernetes）。在图 1 中，可以看到 Linux 内核中的各种挂钩，其中 eBPF 程序可以挂钩执行。
 ![bpf-kernel-hooks](./assets/bpf-kernel-hooks.png)
 
-
-
-- kernel space component:其中需要根据一些内核事件进行决策或数据收集，例如nic上的packet rx、生成shell的系统调用等。
+- kernel space component:其中需要根据一些内核事件进行决策或数据收集，例如 nic 上的 packet rx、生成 shell 的系统调用等。
 - user space component:可以在其中访问由内核代码以某种共享数据结构（映射等）编写的数据。
-  
 
-Linux内核支持不同类型的eBPF程序，每个程序都可以连接到内核中可用的特定挂钩（见图1）。这些程序在与这些挂钩相关联的事件被触发时执行，例如，进行诸如setsockopt（）之类的系统调用，网络驱动程序在数据包缓冲描述符的DMA之后挂钩XDP，等等。
+Linux 内核支持不同类型的 eBPF 程序，每个程序都可以连接到内核中可用的特定挂钩（见图 1）。这些程序在与这些挂钩相关联的事件被触发时执行，例如，进行诸如 setsockopt（）之类的系统调用，网络驱动程序在数据包缓冲描述符的 DMA 之后挂钩 XDP，等等。
 
-所有类型都在内核/include/uapi/linux/bpf.h头文件中枚举，其中包含eBPF程序所需的面向用户的定义。
+所有类型都在内核/include/uapi/linux/bpf.h 头文件中枚举，其中包含 eBPF 程序所需的面向用户的定义。
 
-###  3.2. <a name='XDP'></a>XDP
+### 3.2. <a name='XDP'></a>XDP
 
 XDP（eXpress Data Path）提供了一个内核态、高性能、可编程 BPF 包处理框架。这个框架在软件中最早可以处理包的位置（即网卡驱动收到包的 时刻）运行 BPF 程序。如下图所示：
 
 ![XDP程序运行的位置](./report.assets/1613889918890.png)
 
-以下是XDP程序在连接到网络接口后可以对其接收的数据包执行的一些操作：
+以下是 XDP 程序在连接到网络接口后可以对其接收的数据包执行的一些操作：
 
-- -XDP_DROP – 丢弃且不处理数据包。eBPF程序可以分析流量模式并使用过滤器实时更新XDP应用程序以丢弃特定类型的数据包（例如，恶意流量）。
-- XDP_PASS – 指示应将数据包转发到正常网络堆栈以进行进一步处理。XDP程序可以在此之前修改包的内容。
+- -XDP_DROP – 丢弃且不处理数据包。eBPF 程序可以分析流量模式并使用过滤器实时更新 XDP 应用程序以丢弃特定类型的数据包（例如，恶意流量）。
+- XDP_PASS – 指示应将数据包转发到正常网络堆栈以进行进一步处理。XDP 程序可以在此之前修改包的内容。
 - XDP_TX – 将数据包（可能已被修改）转发到接收它的同一网络接口。
-- XDP_REDIRECT – 绕过正常的网络堆栈并通过另一个NIC将数据包重定向到网络。
-  
-####  3.2.1. <a name='http_filter'></a>http_filter
+- XDP_REDIRECT – 绕过正常的网络堆栈并通过另一个 NIC 将数据包重定向到网络。
 
-一个实例:解析HTTP数据包并提取（并打印）GET/POST请求中包含的URL。通过该实例我们可以观察eBPF是如何处理网络数据流的.
+#### 3.2.1. <a name='http_filter'></a>http_filter
 
-原理是基于bcc工具链中的http_filter对http请求进行拦截并解析http Header(相当于创建一个BPF虚拟机使用套接字接受http请求),注意到linux内核提供了`BPF.SOCKET_FILTER`接口，接受到packet后计算`payload_offset = ETH_HLEN + ip_header_length + tcp_header_length;`,然后通过`load_byte()`,按字节读入header.随后对header进行解析即可
+一个实例:解析 HTTP 数据包并提取（并打印）GET/POST 请求中包含的 URL。通过该实例我们可以观察 eBPF 是如何处理网络数据流的.
+
+原理是基于 bcc 工具链中的 http_filter 对 http 请求进行拦截并解析 http Header(相当于创建一个 BPF 虚拟机使用套接字接受 http 请求),注意到 linux 内核提供了`BPF.SOCKET_FILTER`接口，接受到 packet 后计算`payload_offset = ETH_HLEN + ip_header_length + tcp_header_length;`,然后通过`load_byte()`,按字节读入 header.随后对 header 进行解析即可
 
 ```c
 int http_filter(struct __sk_buff *skb) ;
@@ -152,34 +144,36 @@ int load_byte();
 BPF_TABLE(map_type, key_type, leaf_type, table_name, num_entry)
 ```
 
-通过这个例子我们可以简单地梳理一遍这个filter的思路,
-1. 使用BPF编程加载eBPF程序。
-2. 创建原始套接字并将其绑定到指定的网络接口并将eBPF程序附加到原始套接字。
+通过这个例子我们可以简单地梳理一遍这个 filter 的思路,
+
+1. 使用 BPF 编程加载 eBPF 程序。
+2. 创建原始套接字并将其绑定到指定的网络接口并将 eBPF 程序附加到原始套接字。
 3. 通过文件描述符创建套接字对象。
 4. 进入循环，不断从套接字中读取数据包。
-5. 解析数据包，提取IP头部和TCP头部信息。
+5. 解析数据包，提取 IP 头部和 TCP 头部信息。
 
-其中,该eBPF程序通过过滤和判断网络数据包的头部信息，识别其中的HTTP请求(细节涉及到网络从物理层通过以太网,IP,TCP协议的传输,而eBPF的钩子机制使其可以在传输到内核前监测并处理数据包.)。如果匹配到HTTP请求，就将其保留并传递给用户空间(PASS)，否则丢弃该数据包(DROP)。这样可以实现对网络流量中的HTTP请求的简单捕获和过滤。
+其中,该 eBPF 程序通过过滤和判断网络数据包的头部信息，识别其中的 HTTP 请求(细节涉及到网络从物理层通过以太网,IP,TCP 协议的传输,而 eBPF 的钩子机制使其可以在传输到内核前监测并处理数据包.)。如果匹配到 HTTP 请求，就将其保留并传递给用户空间(PASS)，否则丢弃该数据包(DROP)。这样可以实现对网络流量中的 HTTP 请求的简单捕获和过滤。
 
-####  3.2.2. <a name='CPUsbalance'></a>CPU's balance
-实现对传入数据包的动态负载均衡。通过将传入的数据包在多个CPU之间均衡分配，可以达到以下几个方面的用处：
+#### 3.2.2. <a name='CPUsbalance'></a>CPU's balance
 
-1. 提高系统的并发处理能力：通过将数据包分散到多个CPU上处理，可以提高系统的并发处理能力。每个CPU都可以独立地处理一部分数据包，从而减轻单个CPU的负载压力，提高系统的吞吐量和响应能力。
-2. 平衡负载：动态负载均衡可以根据每个CPU的当前负载情况，将数据包分配给负载较轻的CPU。这样可以避免某些CPU负载过高，而其他CPU负载较低的情况，实现系统资源的合理分配，提高系统的整体性能和效率。
-3. 提高系统的容错性：通过将数据包分散到多个CPU上处理，即使其中一个CPU出现故障或负载过高，其他CPU仍然可以继续处理数据包，确保系统的可用性和稳定性。
-4. 灵活配置权重：使用了权重值来配置每个CPU的处理能力。通过调整不同CPU的权重值，可以根据实际需求分配不同的计算资源。较高权重的CPU将处理更多的数据包，从而充分利用其处理能力。
+实现对传入数据包的动态负载均衡。通过将传入的数据包在多个 CPU 之间均衡分配，可以达到以下几个方面的用处：
 
-**hook点**
+1. 提高系统的并发处理能力：通过将数据包分散到多个 CPU 上处理，可以提高系统的并发处理能力。每个 CPU 都可以独立地处理一部分数据包，从而减轻单个 CPU 的负载压力，提高系统的吞吐量和响应能力。
+2. 平衡负载：动态负载均衡可以根据每个 CPU 的当前负载情况，将数据包分配给负载较轻的 CPU。这样可以避免某些 CPU 负载过高，而其他 CPU 负载较低的情况，实现系统资源的合理分配，提高系统的整体性能和效率。
+3. 提高系统的容错性：通过将数据包分散到多个 CPU 上处理，即使其中一个 CPU 出现故障或负载过高，其他 CPU 仍然可以继续处理数据包，确保系统的可用性和稳定性。
+4. 灵活配置权重：使用了权重值来配置每个 CPU 的处理能力。通过调整不同 CPU 的权重值，可以根据实际需求分配不同的计算资源。较高权重的 CPU 将处理更多的数据包，从而充分利用其处理能力。
+
+**hook 点**
 
 通过调用 `b.attach_xdp(in_if, in_fn, flags)` 将 XDP 程序附加到指定的网络接口上，即设置了 XDP 程序的 hook 点。在这个示例中，XDP 程序的 hook 点是数据包到达网络接口之后、进入内核网络协议栈之前。
 
-不同的hook点具有不同的限制和使用场景。例如，XDP hook点是在数据包到达网络设备驱动程序之前执行的，可以实现非常低延迟的数据包处理，但是只能用于一些特定的网络接口和协议。而tc hook点可以用于更广泛的网络设备和协议，但可能会带来一些额外的性能开销。
+不同的 hook 点具有不同的限制和使用场景。例如，XDP hook 点是在数据包到达网络设备驱动程序之前执行的，可以实现非常低延迟的数据包处理，但是只能用于一些特定的网络接口和协议。而 tc hook 点可以用于更广泛的网络设备和协议，但可能会带来一些额外的性能开销。
 
-在选择hook点时，需要考虑到性能要求、支持的网络设备和协议、适用的内核版本等因素。此外，修改hook点可能需要相应的权限和系统配置。因此，选择合适的hook点应该是根据具体需求进行综合评估和测试的结果。
+在选择 hook 点时，需要考虑到性能要求、支持的网络设备和协议、适用的内核版本等因素。此外，修改 hook 点可能需要相应的权限和系统配置。因此，选择合适的 hook 点应该是根据具体需求进行综合评估和测试的结果。
 
-改变hook点的弊端：改变hook点可能会影响系统性能、稳定性和安全性。不正确地选择或使用hook点可能导致意外的结果，例如数据包丢失、性能下降、系统崩溃等。因此，在更改hook点之前，建议先进行充分的测试和评估，并确保了解相关的风险和影响。
+改变 hook 点的弊端：改变 hook 点可能会影响系统性能、稳定性和安全性。不正确地选择或使用 hook 点可能导致意外的结果，例如数据包丢失、性能下降、系统崩溃等。因此，在更改 hook 点之前，建议先进行充分的测试和评估，并确保了解相关的风险和影响。
 
-**BPF映射类型的运用**
+**BPF 映射类型的运用**
 
 在 eBPF 程序中，不能直接使用传统的 C 语言数组或数据结构，因为 eBPF 程序是在内核中执行的，而不是在用户空间中执行。由于内核和用户空间有不同的内存访问限制和安全机制，因此需要使用特定的数据结构和操作来进行数据的处理和存储。
 
@@ -211,9 +205,9 @@ uint32_t *weight = weights.lookup(&cpu_index);
 
 在这个例子中，`cpu_index` 是当前 CPU 的索引，`weights.lookup(&cpu_index)` 用于从 `weights` Map 中获取相应 CPU 的权重值。
 
-这样就通过weights这个bpf map实现了内核态与用户态的沟通，用户态设置cpu权重，内核态根据用户态设置的权重进行CPU负载均衡
+这样就通过 weights 这个 bpf map 实现了内核态与用户态的沟通，用户态设置 cpu 权重，内核态根据用户态设置的权重进行 CPU 负载均衡
 
-**CPU负载均衡算法**
+**CPU 负载均衡算法**
 
 1. 轮询（Round Robin）：将任务按照顺序依次分配给每个 CPU 核心。每个任务按照固定顺序依次分配给不同的 CPU 核心，实现均衡的任务分配。
 2. 最少连接（Least Connection）：将任务分配给当前连接数最少的 CPU 核心。通过监控每个 CPU 核心的当前连接数，将新任务分配给连接数最少的核心，以实现负载均衡。
@@ -221,53 +215,50 @@ uint32_t *weight = weights.lookup(&cpu_index);
 4. 加权最少连接（Weighted Least Connection）：为每个 CPU 核心分配一个权重值，将任务分配给当前连接数最少且权重值最高的核心。这样可以确保连接数较少且权重较高的 CPU 核心获得更多的任务。
 5. 响应时间加权（Response Time Weighted）：根据每个 CPU 核心的平均响应时间，为每个核心分配一个权重值。响应时间较短的核心将获得更多的任务，以实现负载均衡和性能优化。
 
-这些算法可以根据实际需求和系统特点进行选择和组合。每种算法都有其优势和适用场景，选择适合的算法可以提高 CPU 负载均衡的效果和性能。但是上述算法都有一定局限性，我们可以在上面的基础上，进行动态调整。如：动态调整CPU的权重，达到更好的负载均衡效果。
+这些算法可以根据实际需求和系统特点进行选择和组合。每种算法都有其优势和适用场景，选择适合的算法可以提高 CPU 负载均衡的效果和性能。但是上述算法都有一定局限性，我们可以在上面的基础上，进行动态调整。如：动态调整 CPU 的权重，达到更好的负载均衡效果。
 
-利用grafana进行性能检测：
+利用 grafana 进行性能检测：
 ![bpf-kernel-hooks](./assets/sure_1.png)
 ![bpf-kernel-hooks](./assets/sure_2.png)
 ![bpf-kernel-hooks](./assets/sure_4.png)
 下面进行性能的对比
-|                       | 优化前   | 优化后   |
+| | 优化前 | 优化后 |
 | --------------------- | -------- | -------- |
-| 单个CPU使用率的峰值   | 90.57%   | 52.86%   |
-| 网络带宽吞吐率        | 2.46kb/s | 4.46kb/s |
-| 磁盘写入速率          | 4        | 10       |
-| 磁盘读取速率          | 8        | 27       |
-| 每1秒内IO操作耗时占比 | 0.382%   | 0.565%   |
-| Tcp_inSegs            | 3.68     | 10.2     |
-| Tcp_outSegs           | 3.69     | 10.2     |
-| socket_used           | 1055     | 1055     |
+| 单个 CPU 使用率的峰值 | 90.57% | 52.86% |
+| 网络带宽吞吐率 | 2.46kb/s | 4.46kb/s |
+| 磁盘写入速率 | 4 | 10 |
+| 磁盘读取速率 | 8 | 27 |
+| 每 1 秒内 IO 操作耗时占比 | 0.382% | 0.565% |
+| Tcp_inSegs | 3.68 | 10.2 |
+| Tcp_outSegs | 3.69 | 10.2 |
+| socket_used | 1055 | 1055 |
 
+1. sockets_used: 正在使用的套接字数量，包括 TCP 和 UDP。
 
+2. Tcp_InSegs: 接收的 TCP 报文段数量。
 
-1. sockets_used: 正在使用的套接字数量，包括TCP和UDP。
+3. Tcp_OutSegs: 发送的 TCP 报文段数量。
 
-2. Tcp_InSegs: 接收的TCP报文段数量。
+   这些指标表示接收和发送的 TCP 报文段数量，可以用于监测网络的数据传输情况和活跃度。较高的数值可能表示较大的数据传输量，但同时也可能暗示网络拥塞或重传情况。
 
-3. Tcp_OutSegs: 发送的TCP报文段数量。
+综合分析，通过优化后的负载均衡算法，系统的 CPU 使用率得到了平衡，网络带宽吞吐率、磁盘读写速率、IO 操作耗时、TCP 数据包处理等性能指标也得到了显著的提升。这表明优化后的负载均衡算法在提高系统性能和资源利用率方面取得了较好的效果。
 
-   这些指标表示接收和发送的TCP报文段数量，可以用于监测网络的数据传输情况和活跃度。较高的数值可能表示较大的数据传输量，但同时也可能暗示网络拥塞或重传情况。
+#### 3.2.3. <a name='socket_redirect'></a>socket_redirect
 
-综合分析，通过优化后的负载均衡算法，系统的CPU使用率得到了平衡，网络带宽吞吐率、磁盘读写速率、IO操作耗时、TCP数据包处理等性能指标也得到了显著的提升。这表明优化后的负载均衡算法在提高系统性能和资源利用率方面取得了较好的效果。
-   
+在网络 socket 通信端位于同一主机上时，可以使用 ebpf 程序中的 sockect_redirect 相关库函数，实现透明地绕过 TCP/IP 堆栈来重定向套接字数据，从而加速网络通信。
 
-####  3.2.3. <a name='socket_redirect'></a>socket_redirect
+bpf_sockops_v4.c：hook 点位于 socket 层，负责拦截所有 TCP socket connection 事件，因为在本地节点互相进行通信时会不断进行 socket 的主动或被动建联，然后将请求建联的 socket 信息存储到一个全局映射 （BPF_MAP_TYPE_SOCKHASH）中；
 
-在sockect_redirect中实现了当应用程序位于同一主机上时，使应用程序能够使用eBPF透明地绕过TCP/IP堆栈。
+bpf_tcpip_bypass.c：hook 点在协议族与 tc 层之间，拦截所有 sendmsg() 系统调用，然后从 全局映射 map 中查询发出者 socket 的对接端，之后绕过 tcp 协议栈，直接将数据重定向到 socket 对端。
 
-使用eBPF进行网络加速,研究套接字数据重定向的机制.
+- bpf 程序生效过程：挂载（pin）、编译（compile）、加载（load）、绑定（attach）
 
-1. 使用LLVM Clang前端编译sockops BPF代码，该代码更新sockhash映射
-2. 使用bpftool将上面编译的代码附加到cgroup，以便为系统中的所有套接字操作（如建立连接等）调用它。
-3. 提取由上述程序创建的sockhash映射的id，并将该映射固定到虚拟文件系统，使得第二eBPF程序
-4. 可以访问该map.编译tcpip_bypass代码，该代码将绕过tcpip堆栈
-5. 执行套接字数据重定向。使用bpftool将上述eBPF代码附加到sockhash映射
+1. 挂载 bpf 文件系统， 将 SOCKHASH map 固定在 /sys/fs/bpf/ 文件系统上，使得用户可以通过读写相关的文件描述符来插入、删除、查询和更新映射中的键值对。
+2. 使用 LLVM Clang 前端编译 ebpf 相关源代码，获得相关目标代码文件
+3. 使用 bpftool 将上面编译的目标文件 object 加载到内核中
+4. 使用 bpftool 将已加载到内核中的程序绑定到到对应挂载点（cgroup 和 sock_ops_map）
 
-- BPF钩子挂载:
-![BPF_hooks](assets/BPF_hooks.png)
-
-- BPF共享maps:
+- BPF 共享 maps:
 
 ```bash
 #sudo tree /sys/fs/bpf/
@@ -275,59 +266,83 @@ uint32_t *weight = weights.lookup(&cpu_index);
 ├── bpf_sockops
 ├── bpf_tcpip_bypass
 └── sock_ops_map
-# sudo bpftool map list
-4: sockhash  name sock_ops_map  flags 0x0
+```
+
+bpftool prog show 显示所有已被加载到内核中的 bpf 程序，使用特定的 map_id 可以访问 ebpf 特定映射对象。
+
+```bash
+#sudo bpftool prog show
+1730: sock_ops  name bpf_sockops_v4  tag 8fb64d4d0f48a1a4  gpl
+	loaded_at 2020-04-08T15:54:36-0700  uid 0
+	xlated 688B  jited 399B  memlock 4096B  map_ids 182
+1734: sk_msg  name bpf_tcpip_bypas  tag 550f6d3cfcae2157  gpl
+	loaded_at 2020-04-08T15:54:36-0700  uid 0
+	xlated 224B  jited 151B  memlock 4096B  map_ids 182
+# sudo bpftool map show id 182
+182: sockhash  name sock_ops_map  flags 0x0
         key 24B  value 4B  max_entries 65535  memlock 2097152B
 ```
 
-- 验证应用程序是否绕过TCP/IP堆栈：
+- 验证应用程序是否绕过 TCP/IP 堆栈：
 
-可以将内核实时流跟踪文件trace_pipe放入shell中，以监视通过eBPF的TCP通信的跟踪
+可以通过内核实时流跟踪文件 trace_pipe 监视通过 eBPF 的 TCP 通信情况
+
 ```bash
 # sudo cat /sys/kernel/debug/tracing/trace_pipe
-  <idle>-0       [000] d.s.1 89797.577008: bpf_trace_printk: <<< ipv4 op = 4, port 38902 --> 80
-  <idle>-0       [000] d.s.1 89863.993725: bpf_trace_printk: <<< ipv4 op = 4, port 58380 --> 443
+CPU:1 [LOST 135 EVENTS]
+    netperf-21216   [001] d...1  5924.684318: bpf_trace_printk: <<< ipv4 op = 4, port 56801 --> 8080
+    netperf-21216   [001] d...1  5924.686797: bpf_trace_printk: <<< ipv4 op = 4, port 42793 --> 35159
+    netperf-21216   [001] d.s11  5924.686810: bpf_trace_printk: <<< ipv4 op = 5, port 35159 --> 42793
+    netperf-22138   [001] d...1  6286.663639: bpf_trace_printk: <<< ipv4 op = 4, port 39219 --> 8080
+    netperf-22138   [001] d...1  6286.664885: bpf_trace_printk: <<< ipv4 op = 4, port 33711 --> 42409
+    netperf-22138   [001] d.s11  6286.664891: bpf_trace_printk: <<< ipv4 op = 5, port 42409 --> 33711
 ...
 ```
-我们可以使用SOCAT派生的TCP侦听器来模拟echo服务器，并使用netcat来发送TCP连接请求。
 
-```bash
-sudo socat TCP4-LISTEN:1000,fork exec:cat
-nc localhost 1000 # this should produce the trace in the kernel file trace_pipe
-```
-可以监测结果
-```shell
-# sudo cat /sys/kernel/debug/tracing/trace_pipe
-        <idle>-0       [000] d.s.1 91597.541404: bpf_trace_printk: <<< ipv4 op = 4, port 40762 --> 80
-        node-126065  [000] d.s.1 91598.729170: bpf_trace_printk: <<< ipv4 op = 4, port 38678 --> 443
-        nc-132366  [000] d...1 91639.938416: bpf_trace_printk: <<< ipv4 op = 4, port 38838 --> 1000
-        nc-132366  [000] d.s11 91639.938514: bpf_trace_printk: <<< ipv4 op = 5, port 1000 --> 38838
-```
+- netperf 性能测试分析
 
-####  3.2.4. <a name='AFXDP'></a>AF_XDP
+1. Latency
+
+<div align=center><img width = '600' height ='400' src ="report.assets/latency.png"/></div>
+
+利用 netperf 工具，在不同的请求响应大小、不同测试时间（本图为 90s）下，对 ebpf 绕过协议栈与未绕过协议栈时的响应网络延迟时间进行对比，可见在响应数据量较小时两者性能差别不大，在响应数据量较大时 ebpf 程序路径要明显优于 tcp 栈路径。
+
+2. Transaction Rate
+
+<div align=center><img width = '600' height ='400' src ="report.assets/transrate.png"/></div>
+
+同样利用 netperf 工具，在不同的请求响应大小、不同测试时间（本图为 90s）下，对 ebpf 绕过协议栈与未绕过协议栈时的事务量处理速率进行对比，可见大多数情况下 ebpf 路径优于协议栈路径，但这种优化性能不太稳定，且随着响应数据量的增加两者性能可能趋于相似。
+
+3. Throughput
+
+<div align=center><img width = '600' height ='450' src ="report.assets/throughput.png"/></div>
+
+最后同样利用 netperf 工具，在不同的 rx 缓冲池大小、不同测试时长下，对 ebpf 绕过协议栈与未绕过协议栈时的网络吞吐量进行对比，可见 tcp 路径的平均性能要优于 ebpf，这是因为 linux 自带的 Nagle 算法优化程度要优于 ebpf 路径。
+
+> Nagle's algorithm 的主要原则是尽可能将较小的数据包合并成更大的数据块进行传输，以减少网络传输的开销。具体来说，该算法将数据缓冲区中的数据累积到一个最大的 TCP Maximum Segment Size (MSS) 之前，然后再发送。这样可以减少网络上的报文段数量，提高带宽利用率。
+
+#### 3.2.4. <a name='AFXDP'></a>AF_XDP
 
 xdp 没有完全绕过内核，但是可以让包跳过内核的网络栈，直接从用户空间读取，可以通过 `AF_XDP` 的 `XDP_REDIRECT` 语义实现。
 
-通过XDP_REDIRECT我们可以将报文重定向到其他设备发送出去或者重定向到其他的CPU继续进行处理。而AF_XDP则利用 bpf_redirect_map()函数，实现将报文重定向到用户态一块指定的内存中，接下来我们看一下这到底是如何做到的。
+通过 XDP_REDIRECT 我们可以将报文重定向到其他设备发送出去或者重定向到其他的 CPU 继续进行处理。而 AF_XDP 则利用 bpf_redirect_map()函数，实现将报文重定向到用户态一块指定的内存中，接下来我们看一下这到底是如何做到的。
 
-我们使用普通的 socket() 系统调用创建一个AF_XDP套接字（XSK）。每个XSK都有两个ring：RX RING 和 TX RING。套接字可以在 RX RING 上接收数据包，并且可以在 TX RING 环上发送数据包。这些环分别通过 setockopts() 的 XDP_RX_RING 和 XDP_TX_RING 进行注册和调整大小。每个 socket 必须至少有一个这样的环。RX或TX描述符环指向存储区域（称为UMEM）中的数据缓冲区。RX和TX可以共享同一UMEM，因此不必在RX和TX之间复制数据包。
+我们使用普通的 socket() 系统调用创建一个 AF_XDP 套接字（XSK）。每个 XSK 都有两个 ring：RX RING 和 TX RING。套接字可以在 RX RING 上接收数据包，并且可以在 TX RING 环上发送数据包。这些环分别通过 setockopts() 的 XDP_RX_RING 和 XDP_TX_RING 进行注册和调整大小。每个 socket 必须至少有一个这样的环。RX 或 TX 描述符环指向存储区域（称为 UMEM）中的数据缓冲区。RX 和 TX 可以共享同一 UMEM，因此不必在 RX 和 TX 之间复制数据包。
 
-UMEM也有两个 ring：FILL RING 和 COMPLETION RING。应用程序使用 FILL RING 向内核发送可以承载报文的 addr (该 addr 指向UMEM中某个chunk)，以供内核填充RX数据包数据。每当收到数据包，对这些 chunks 的引用就会出现在RX环中。另一方面，COMPLETION RING包含内核已完全传输的 chunks 地址，可以由用户空间再次用于 TX 或 RX。
+UMEM 也有两个 ring：FILL RING 和 COMPLETION RING。应用程序使用 FILL RING 向内核发送可以承载报文的 addr (该 addr 指向 UMEM 中某个 chunk)，以供内核填充 RX 数据包数据。每当收到数据包，对这些 chunks 的引用就会出现在 RX 环中。另一方面，COMPLETION RING 包含内核已完全传输的 chunks 地址，可以由用户空间再次用于 TX 或 RX。
 
 ![enter description here](./report.assets/1614584458041.png)
 
-##### AF_XDP收发包过程
+##### AF_XDP 收发包过程
 
-我们知道，XSK的操作涉及四个Ring：RX、TX、Fill和Completion Ring；都是单生产者单消费者（SCSP）模型，需要内核或者用户程序先生产了，对方才能消费；
+我们知道，XSK 的操作涉及四个 Ring：RX、TX、Fill 和 Completion Ring；都是单生产者单消费者（SCSP）模型，需要内核或者用户程序先生产了，对方才能消费；
 
-对Fill Ring来说，用户程序作为生产者，得先生产一些元素，我们统一叫desc，这些desc指向umem中的某个chunk，这样内核才能作为消费者，拿走这些desc，找到desc指向的umem的chunk，再把收到的数据包放到该chunk中，示意图：
+对 Fill Ring 来说，用户程序作为生产者，得先生产一些元素，我们统一叫 desc，这些 desc 指向 umem 中的某个 chunk，这样内核才能作为消费者，拿走这些 desc，找到 desc 指向的 umem 的 chunk，再把收到的数据包放到该 chunk 中，示意图：
 ![在这里插入图片描述](./report.assets/cf9819e3a38a471cb504b467f3fda380.png)
 
-> ring就是一个固定长度的数组，并且同时拥有一个生产者和一个消费者，生产者向数组中逐个填写数据，消费者从数组中逐个读取生产者填充的数据，生产者和消费者都用数组的下标表示，不断累加，像一个环一样不断重复生产然后消费的动作，因此得名ring。
+> ring 就是一个固定长度的数组，并且同时拥有一个生产者和一个消费者，生产者向数组中逐个填写数据，消费者从数组中逐个读取生产者填充的数据，生产者和消费者都用数组的下标表示，不断累加，像一个环一样不断重复生产然后消费的动作，因此得名 ring。
 >
 > ![enter description here](./report.assets/1614166502357.png)
-
-
 
 发包过程如下：
 
@@ -341,7 +356,7 @@ UMEM也有两个 ring：FILL RING 和 COMPLETION RING。应用程序使用 FILL 
 
 ![请添加图片描述](./report.assets/45627b073e8a423e9b28d5b04575de34.gif)
 
-> 注：为了简便，每个umem chunk的大小假定为1，以及图示和例程中操作空闲chunk的方式不太一样，但对四个Ring的操作是类似的，具体以程序为准。
+> 注：为了简便，每个 umem chunk 的大小假定为 1，以及图示和例程中操作空闲 chunk 的方式不太一样，但对四个 Ring 的操作是类似的，具体以程序为准。
 
 ##### AF_XDP 的性能提升从何而来？
 
@@ -359,19 +374,17 @@ AF_XDP socket 非常快，在这个性能提升的背后隐藏了多少秘密呢
 
 Van Jacobson 在报告中谈到的 [transport signature](http://www.lemis.com/grog/Documentation/vj/lca06vj.pdf)，在 XDP/eBPF 程序中体现为选择将 frame `XDP_REDIRECT` 到哪个 AF_XDP socket。
 
-##### AF_XDP需要做哪些准备？
+##### AF_XDP 需要做哪些准备？
 
-###### 1.1 创建AF_XDP的socket
+###### 1.1 创建 AF_XDP 的 socket
 
 ```ini
 xsk_fd = socket(AF_XDP, SOCK_RAW, 0);
 ```
 
-这一步没什么好展开的。
+###### 1.2 为 UMEM 申请内存
 
-###### 1.2 为UMEM申请内存
-
-上文提到UMEM是一块包含固定大小chunk的内存，我们可以通过malloc/mmap/hugepages申请。下文大部分代码出自kernel samples。
+上文提到 UMEM 是一块包含固定大小 chunk 的内存，我们可以通过 malloc/mmap/hugepages 申请。下文大部分代码出自 kernel samples。
 
 ```cpp
     bufs = mmap(NULL, NUM_FRAMES * opt_xsk_frame_size,
@@ -383,7 +396,7 @@ xsk_fd = socket(AF_XDP, SOCK_RAW, 0);
     }
 ```
 
-###### 1.3 向AF_XDP socket注册UMEM
+###### 1.3 向 AF_XDP socket 注册 UMEM
 
 ```rust
         struct xdp_umem_reg mr;
@@ -401,7 +414,7 @@ xsk_fd = socket(AF_XDP, SOCK_RAW, 0);
         }
 ```
 
-其中xdp_umem_reg结构定义在 usr/include/linux/if_xdp.h中：
+其中 xdp_umem_reg 结构定义在 usr/include/linux/if_xdp.h 中：
 
 ```rust
 struct xdp_umem_reg {
@@ -415,17 +428,17 @@ struct xdp_umem_reg {
 
 **成员解析：**
 
-- addr就是UMEM内存的起始地址；
-- len是整个UMEM内存的总长度；
-- chunk_size就是每个chunk的大小；
-- headroom，如果设置了，那么报文数据将不是从每个chunk的起始地址开始存储，而是要预留出headroom大小的内存，再开始存储报文数据，headroom在隧道网络中非常常见，方便封装外层头部；
-- flags, UMEM还有一些更复杂的用法，通过flag设置，后面再进一步展开；
+- addr 就是 UMEM 内存的起始地址；
+- len 是整个 UMEM 内存的总长度；
+- chunk_size 就是每个 chunk 的大小；
+- headroom，如果设置了，那么报文数据将不是从每个 chunk 的起始地址开始存储，而是要预留出 headroom 大小的内存，再开始存储报文数据，headroom 在隧道网络中非常常见，方便封装外层头部；
+- flags, UMEM 还有一些更复杂的用法，通过 flag 设置，后面再进一步展开；
 
-###### 1.4 创建FILL RING 和 COMPLETION RING
+###### 1.4 创建 FILL RING 和 COMPLETION RING
 
-我们通过 setsockopt() 设置 FILL/COMPLETION/RX/TX ring的大小（在我看来这个过程相当于创建，不设置大小的ring是没有办法使用的）。
+我们通过 setsockopt() 设置 FILL/COMPLETION/RX/TX ring 的大小（在我看来这个过程相当于创建，不设置大小的 ring 是没有办法使用的）。
 
-FILL RING 和 COMPLETION RING是UMEM必须，RX和TX则是 AF_XDP socket二选一的，例如AF_XDP socket只收包那么只需要设置RX RING的大小即可。
+FILL RING 和 COMPLETION RING 是 UMEM 必须，RX 和 TX 则是 AF_XDP socket 二选一的，例如 AF_XDP socket 只收包那么只需要设置 RX RING 的大小即可。
 
 ```lua
         err = setsockopt(umem->fd, SOL_XDP, XDP_UMEM_FILL_RING,
@@ -444,15 +457,11 @@ FILL RING 和 COMPLETION RING是UMEM必须，RX和TX则是 AF_XDP socket二选�
         }
 ```
 
-上述操作相当于创建了 FILL RING 和 和 COMPLETION RING，创建ring的过程主要是初始化 producer 和 consumer 的下标，以及创建ring数组。
+上述操作相当于创建了 FILL RING 和 和 COMPLETION RING，创建 ring 的过程主要是初始化 producer 和 consumer 的下标，以及创建 ring 数组。
 
-**问题来了：**
+###### 1.5 将 FILL RING 映射到用户态
 
-上文提到，用户态程序是 FILL RING 的生产者和 CONPLETION RING 的消费者，上面2个 ring 的创建是在内核中创建了 ring 并初始化了其相关成员。那么用户态程序如何操作这两个位于内核中的 ring 呢？所以接下来我们需要将整个 ring 映射到用户态空间。
-
-###### 1.5 将FILL RING 映射到用户态
-
-第一步是获取内核中ring结构各成员的偏移，因为从5.4版本开始后，ring结构中除了 producer、consumer、desc外，又新增了一个flag成员。所以用户态程序需要先获取 ring 结构中各成员的准确便宜，才能在mmap() 之后准确识别内存中各成员位置。
+第一步是获取内核中 ring 结构各成员的偏移，因为从 5.4 版本开始后，ring 结构中除了 producer、consumer、desc 外，又新增了一个 flag 成员。所以用户态程序需要先获取 ring 结构中各成员的准确便宜，才能在 mmap() 之后准确识别内存中各成员位置。
 
 ```cpp
         err = xsk_get_mmap_offsets(umem->fd, &off);
@@ -462,7 +471,7 @@ FILL RING 和 COMPLETION RING是UMEM必须，RX和TX则是 AF_XDP socket二选�
         }
 ```
 
-xsk_get_mmap_offsets() 函数主要是通过getsockopt函数实现这一功能：
+xsk_get_mmap_offsets() 函数主要是通过 getsockopt 函数实现这一功能：
 
 ```kotlin
         err = getsockopt(fd, SOL_XDP, XDP_MMAP_OFFSETS, off, &optlen);
@@ -491,7 +500,7 @@ xsk_get_mmap_offsets() 函数主要是通过getsockopt函数实现这一功能�
         fill->cached_cons = umem->config.fill_size;
 ```
 
-上面代码需要关注的一点是 mmap() 函数中指定内存的长度——**off.fr.desc + umem->config.fill_size \* sizeof(__u64)**，umem->config.fill_size * sizeof(__u64)没什么好说的，就是ring数组的长度，而 off.fr.desc 则是ring结构体的长度，我们先看下内核中ring结构的定义：
+上面代码需要关注的一点是 mmap() 函数中指定内存的长度——**off.fr.desc + umem->config.fill_size \* sizeof(\_\_u64)**，umem->config.fill_size \* sizeof(\_\_u64)没什么好说的，就是 ring 数组的长度，而 off.fr.desc 则是 ring 结构体的长度，我们先看下内核中 ring 结构的定义：
 
 ```rust
 struct xdp_ring_offset {
@@ -501,13 +510,13 @@ struct xdp_ring_offset {
 };
 ```
 
-这是没有flag的定义，无伤大雅。这里desc的地址其实就是ring数组的起始地址了。而off.fr.desc是desc相对 ring 结构体起始地址的偏移，相当于结构体长度。我们用一张图来看下ring所在内存的结构分布：
+这是没有 flag 的定义，无伤大雅。这里 desc 的地址其实就是 ring 数组的起始地址了。而 off.fr.desc 是 desc 相对 ring 结构体起始地址的偏移，相当于结构体长度。我们用一张图来看下 ring 所在内存的结构分布：
 
 ![enter description here](./report.assets/1614236273468.png)
 
-后面一堆赋值代码没什么好讲的，umem->fill 是用户态程序自定义的一个结构体，其成员 producer、consumer、flags、ring都是指针，分别指向实际ring结构中的对应成员，umem->fill中的其他成员主要在后面报文收发时用到，起辅助作用。
+后面一堆赋值代码没什么好讲的，umem->fill 是用户态程序自定义的一个结构体，其成员 producer、consumer、flags、ring 都是指针，分别指向实际 ring 结构中的对应成员，umem->fill 中的其他成员主要在后面报文收发时用到，起辅助作用。
 
-###### 1.6 将COMPLETION RING 映射到用户态
+###### 1.6 将 COMPLETION RING 映射到用户态
 
 跟上面 FILL RING 的映射一样，只贴代码好了：
 
@@ -529,9 +538,9 @@ struct xdp_ring_offset {
         comp->ring = map + off.cr.desc;
 ```
 
-###### 1.7 创建RX RING和TX RING然后mmap
+###### 1.7 创建 RX RING 和 TX RING 然后 mmap
 
-这里和 FILL RING 以及 COMPLETION RING的做法基本完全一致，只贴代码：
+这里和 FILL RING 以及 COMPLETION RING 的做法基本完全一致，只贴代码：
 
 ```rust
         if (rx) {
@@ -599,7 +608,7 @@ struct xdp_ring_offset {
         xsk->tx = tx;
 ```
 
-###### 1.8 调用bind()将AF_XDP socket绑定的指定设备的某一队列
+###### 1.8 调用 bind()将 AF_XDP socket 绑定的指定设备的某一队列
 
 ```rust
         sxdp.sxdp_family = PF_XDP;
@@ -614,21 +623,21 @@ struct xdp_ring_offset {
         }
 ```
 
-##### 内核态xdp程序
+##### 内核态 xdp 程序
 
-XDP程序利用 bpf_reditrct() 函数可以将报文重定向到其他设备发送出去或者重定向到其他CPU继续处理，后来又发展出了bpf_redirect_map()函数，可以将重定向的目的地保存在map中。AF_XDP 正是利用了 bpf_redirect_map() 函数以及 BPF_MAP_TYPE_XSKMAP 类型的 map 实现将报文重定向到用户态程序。
+XDP 程序利用 bpf_reditrct() 函数可以将报文重定向到其他设备发送出去或者重定向到其他 CPU 继续处理，后来又发展出了 bpf_redirect_map()函数，可以将重定向的目的地保存在 map 中。AF_XDP 正是利用了 bpf_redirect_map() 函数以及 BPF_MAP_TYPE_XSKMAP 类型的 map 实现将报文重定向到用户态程序。
 
-> libbpf/libxdp提供的xsk_socket__create函数，如果给其提供的配置参数struct xsk_socket_config *为空或者将其中的libbpf_flags / libxdp_flags置为0，就会默认加载一个简单的XDP程序到所给出的接口，把所有配置的queue_id对应的网卡队列收到的包都redirect到该xsk；
+> libbpf/libxdp 提供的 xsk_socket\_\_create 函数，如果给其提供的配置参数 struct xsk_socket_config \*为空或者将其中的 libbpf_flags / libxdp_flags 置为 0，就会默认加载一个简单的 XDP 程序到所给出的接口，把所有配置的 queue_id 对应的网卡队列收到的包都 redirect 到该 xsk；
 >
-> 如果将其中的libbpf_flags / libxdp_flags置为XSK_LIBBPF_FLAGS__INHIBIT_PROG_LOAD或XSK_LIBXDP_FLAGS__INHIBIT_PROG_LOAD，就可以禁止默认XDP程序的加载，后边就得自己写程序自己加载和更新xsks_map映射了，但这样能让程序更可控一些；
+> 如果将其中的 libbpf_flags / libxdp_flags 置为 XSK_LIBBPF_FLAGS**INHIBIT_PROG_LOAD 或 XSK_LIBXDP_FLAGS**INHIBIT_PROG_LOAD，就可以禁止默认 XDP 程序的加载，后边就得自己写程序自己加载和更新 xsks_map 映射了，但这样能让程序更可控一些；
 
-我们还是自己写一个XDP程序，过滤出IPv4 TCP报文，将其redirect到XSK，其余数据包则是通过XDP_PASS给内核去继续处理；顺便通过ELF约定格式，预定义BPF_MAP_TYPE_XSKMAP类型的xsks_map，等会儿用户程序创建好xsk了需要更新[queue_idx, xsk_fd]键值对到该映射中；
+我们还是自己写一个 XDP 程序，过滤出 IPv4 TCP 报文，将其 redirect 到 XSK，其余数据包则是通过 XDP_PASS 给内核去继续处理；顺便通过 ELF 约定格式，预定义 BPF_MAP_TYPE_XSKMAP 类型的 xsks_map，等会儿用户程序创建好 xsk 了需要更新[queue_idx, xsk_fd]键值对到该映射中；
 
 程序如下：
 
 ```c
-/* 
-SPDX-License-Identifier: GPL-2.0 
+/*
+SPDX-License-Identifier: GPL-2.0
 AF_XDP的内核态程序
 仅仅过滤TCP协议并发送到AF_XDP的用户态程序
 */
@@ -686,9 +695,9 @@ int xdp_prog(struct xdp_md *ctx)
 char _license[] SEC("license") = "GPL";
 ```
 
-##### 用户态xdp程序
+##### 用户态 xdp 程序
 
-既然是redirect到用户空间，主要工作都在用户空间，包括创建umem、xsk、处理各个ring收发包、处理数据包等。
+既然是 redirect 到用户空间，主要工作都在用户空间，包括创建 umem、xsk、处理各个 ring 收发包、处理数据包等。
 
 ###### 主函数
 
@@ -837,7 +846,7 @@ int main(int argc, char **argv)
 
 ###### 数据包处理与响应
 
-由于在用户态的原始数据包处理涉及用户态TCP协议栈的设立，体量较大，因此这里做简单假设（仅仅处理TCP HTTP GET请求，其他请求直接drop）
+由于在用户态的原始数据包处理涉及用户态 TCP 协议栈的设立，体量较大，因此这里做简单假设（仅仅处理 TCP HTTP GET 请求，其他请求直接 drop）
 
 ```c
 // 用于处理接收到的数据包并生成响应
@@ -883,7 +892,7 @@ static bool process_packet(struct xsk_socket_info *xsk,
 }
 ```
 
-其中tcp_process函数如下：
+其中 tcp_process 函数如下：
 
 ```c
 // 用户态TCP协议栈的核心函数，仅考虑处理HTTP GET请求
@@ -897,8 +906,8 @@ static bool tcp_process(struct xsk_socket_info *xsk, uint8_t *pkt,
 	2. 握手三次后，建立连接
 	3. 客户端发送HTTP GET请求，服务器回复HTTP响应
 	4. 四次挥手后，终止连接
-	*/ 
-	
+	*/
+
 	// 获取TCP数据包的有效载荷
 	uint8_t *payload = pkt + sizeof(*eth) + sizeof(*ip) + sizeof(*tcp);
 	uint32_t payload_len = ntohs(ip->tot_len) - sizeof(*ip) - sizeof(*tcp);
@@ -1007,7 +1016,7 @@ static bool tcp_process(struct xsk_socket_info *xsk, uint8_t *pkt,
 
 ##### 测试环境下的运行实例
 
-到/testenv目录下打开测试环境
+到/testenv 目录下打开测试环境
 
 ```bash
 ./testenv.sh setup --name=test
@@ -1018,17 +1027,17 @@ eval $(./testenv.sh alias)
 
 ![image-20230708155036770](./report.assets/image-20230708155036770.png)
 
-使用make后的用户态xdp程序挂载对应的内核态xdp程序并运行相应的数据状态监视
+使用 make 后的用户态 xdp 程序挂载对应的内核态 xdp 程序并运行相应的数据状态监视
 
 ```bash
 ./af_xdp_user -d test --filename af_xdp_kern.o
 ```
 
-输出如下图所示，可以看到RX接收到的每一个报文都处理后从TX发出
+输出如下图所示，可以看到 RX 接收到的每一个报文都处理后从 TX 发出
 
 ![image-20230708155407879](./report.assets/image-20230708155407879.png)
 
-通过xdp-loader可以查看挂载的xdp程序状态
+通过 xdp-loader 可以查看挂载的 xdp 程序状态
 
 ```
 sudo xdp-loader status
@@ -1036,10 +1045,10 @@ sudo xdp-loader status
 
 ![image-20230708155345991](./report.assets/image-20230708155345991.png)
 
-##  4.<a name='-1'></a>展望
+## 4.<a name='-1'></a>展望
 
 - 项目进展甘特图
-  
+
 ```mermaid
 gantt
     dateFormat  YYYY-MM-DD
@@ -1063,13 +1072,10 @@ gantt
 
 由于时间仓促，尽管项目已经取得了显著的进展，但仍然存在一些不完善之处。以下是一些项目在未来值得优化的地方
 
-1. 改进DisgraFS的稳定性：在当前的实现中，虽然已经成功摆脱了客户端的依赖，并通过多个XDP程序对DisgraFS的mainserver中央服务器进行了优化，但还需要进一步提高系统的稳定性。这可能包括检测和修复潜在的错误、处理边缘情况，并确保系统在各种负载条件下都能正常运行。
+1. 改进 DisgraFS 的稳定性：在当前的实现中，虽然已经成功摆脱了客户端的依赖，并通过多个 XDP 程序对 DisgraFS 的 mainserver 中央服务器进行了优化，但还需要进一步提高系统的稳定性。这可能包括检测和修复潜在的错误、处理边缘情况，并确保系统在各种负载条件下都能正常运行。
 2. 扩展性和可伸缩性：考虑到分布式文件系统通常需要处理大规模的数据和用户访问，未来的工作应该重点关注系统的扩展性和可伸缩性。这可能涉及到分布式算法的改进、负载均衡策略的优化，以及在系统中引入自适应的机制，以适应动态变化的工作负载。
-3. 更深入的性能优化：虽然已经使用了多个XDP程序对DisgraFS的中央服务器进行了优化，但可以进一步探索其他性能优化策略。这可能包括针对关键路径的优化、更高效的数据缓存机制、I/O调度算法的改进等。通过深入的性能优化，可以进一步提高系统的吞吐量和响应性能。
-4. 安全性和隐私保护：随着分布式文件系统的使用范围扩大，确保数据的安全性和隐私保护变得尤为重要。未来的工作可以探索在DisgraFS中引入安全机制，如数据加密、访问控制等，以保护用户数据的机密性和完整性。
-
-
-
+3. 更深入的性能优化：虽然已经使用了多个 XDP 程序对 DisgraFS 的中央服务器进行了优化，但可以进一步探索其他性能优化策略。这可能包括针对关键路径的优化、更高效的数据缓存机制、I/O 调度算法的改进等。通过深入的性能优化，可以进一步提高系统的吞吐量和响应性能。
+4. 安全性和隐私保护：随着分布式文件系统的使用范围扩大，确保数据的安全性和隐私保护变得尤为重要。未来的工作可以探索在 DisgraFS 中引入安全机制，如数据加密、访问控制等，以保护用户数据的机密性和完整性。
 ## 参考文献
 
 [1] DisGraFS. (2021). OSH-2021/x-DisGraFS. GitHub. https://github.com/OSH-2021/x-DisGraFS
